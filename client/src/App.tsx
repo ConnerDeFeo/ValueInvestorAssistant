@@ -2,8 +2,8 @@ import { useState } from "react";
 import API from "./service/API";
 
 function App() {
-  const [firstUrl, setFirstUrl] = useState<string>('');
-  const [secondUrl, setSecondUrl] = useState<string>('');
+  const [firstUrl, setFirstUrl] = useState<string>('https://www.sec.gov/Archives/edgar/data/320193/000032019323000106/aapl-20230930.htm');
+  const [secondUrl, setSecondUrl] = useState<string>('https://www.sec.gov/Archives/edgar/data/320193/000032019324000123/aapl-20240928.htm');
 
   const handleSubmit = async () => {
     const resp  = await API.post("http://127.0.0.1:8000/compare", {
