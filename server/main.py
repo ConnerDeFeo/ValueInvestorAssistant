@@ -36,7 +36,7 @@ async def compare_filings(request: CompareRequest):
         "added_count": len(differences["added"]),
         "removed_count": len(differences["removed"]),
         "unchanged_count": len(differences["unchanged"]),
-        "sample_added": differences["added"][:10],  # First 10 new lines
-        "sample_removed": differences["removed"][:10],  # First 10 removed lines
+        "sample_added": differences["added"][0:10],  # First 10 new lines
+        "sample_removed": differences["removed"][0:10],  # First 10 removed lines
     }
     

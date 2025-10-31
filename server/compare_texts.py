@@ -17,7 +17,6 @@ def compare_texts(text1: str, text2: str) -> dict:
         "removed": [],
         "unchanged": []
     }
-    print("Diff length:", len(diff))
     for line in diff:
         if line.startswith('+ '):
             changes["added"].append(line[2:])
