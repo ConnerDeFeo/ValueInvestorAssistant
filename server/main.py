@@ -1,12 +1,15 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+import boto3
 
 from fetch_10k_from_sec import fetch_10k_from_sec
 from parse_html_to_text import parse_html_to_text
 from compare_texts import compare_texts
 
 app = FastAPI()
+session = boto3.Session(profile_name="admin")
+bedrock = session.client(service_name="bedrock-runtime", region_name="us-east-2")
 
 app.add_middleware(
     CORSMiddleware,
@@ -31,12 +34,31 @@ async def compare_filings(request: CompareRequest):
     # 3. Diff them
     differences = compare_texts(filling1_text, filling2_text)
         
+    response = bedrock.converse(
+        modelId = "us.amazon.nova-lite-v1:0",
+        messages=[
+            {
+                "role": "user", 
+                "content": [{"text": 
+                    f"""
+                        You are a financial analysts, and comparing two financial statements:
+                        {request.url1} and {request.url2}
+                        These are the differences between them, with filling_one_diff being the contents that are 
+                        in the first financial statement and not the second, and filling_two diff being the contents
+                        that are in the second statement and not the first:
+                        {differences}
+
+                        Explain any changes that have occured. Do this in 100 tokens or less.
+                    """
+                }]
+            }
+        ],
+        inferenceConfig={"maxTokens": 100, "temperature": 0.3, "topP": 0.3}
+    )
+
+    raw_text = response["output"]["message"]["content"][0]["text"]
     return {
         "status": "success",
-        "added_count": len(differences["added"]),
-        "removed_count": len(differences["removed"]),
-        "unchanged_count": len(differences["unchanged"]),
-        "sample_added": differences["added"][0:10],  # First 10 new lines
-        "sample_removed": differences["removed"][0:10],  # First 10 removed lines
+        "analysis": raw_text,
     }
     
