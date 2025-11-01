@@ -13,7 +13,7 @@ function App() {
     setLoading(true);
     setAnalysis(''); // Clear previous analysis
     try {
-      const resp  = await API.post("http://127.0.0.1:8000/compare", {
+      const resp  = await API.post(`${import.meta.env.VITE_API_URL}/compare`, {
         url1: firstUrl,
         url2: secondUrl
       });
