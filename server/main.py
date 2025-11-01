@@ -90,7 +90,7 @@ async def compare_filings(request: CompareRequest):
                     }]
                 },
             ],
-            inferenceConfig={"maxTokens": 3000, "temperature": 0}
+            inferenceConfig={"maxTokens": 4000, "temperature": 0}
         )
     except Exception as e:
         return {
