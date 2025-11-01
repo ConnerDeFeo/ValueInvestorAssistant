@@ -1,26 +1,32 @@
 import difflib
 
-def compare_texts(text1: str, text2: str) -> dict:
-    # Split into lines for comparison
-    lines1 = text1['business'].splitlines(keepends=True)
-    lines2 = text2['business'].splitlines(keepends=True)
+def compare_texts(oldText, newText):
+    differences = {}
+    for key in oldText.keys():
+        if key not in newText:
+            raise ValueError(f"Section {key} not found in second text for comparison.")
+        # Split into lines for comparison
+        lines1 = oldText[key].splitlines(keepends=True)
+        lines2 = newText[key].splitlines(keepends=True)
+        lines1 = [line for line in lines1 if len(line)>10]  # remove empty lines
+        lines2 = [line for line in lines2 if len(line)>10]  # remove empty lines
+        # Create a diff
+        differ = difflib.Differ()
+        diff = list(differ.compare(lines1, lines2))
+        
+        # Parse the diff output
+        changes = {
+            "removed": [], # removed from old filing
+            "added": [], # added in new filing
+            "unchanged": []
+        }
+        for line in diff:
+            if line.startswith('+ '):
+                changes["added"].append(line[2:])
+            elif line.startswith('- '):
+                changes["removed"].append(line[2:])
+            elif line.startswith('  '):
+                changes["unchanged"].append(line[2:])
+        differences[key] = changes
 
-    # Create a diff
-    differ = difflib.Differ()
-    diff = list(differ.compare(lines1, lines2))
-    
-    # Parse the diff output
-    changes = {
-        "filling_one_diff": [],
-        "filling_two_diff": [],
-        "unchanged_count": []
-    }
-    for line in diff:
-        if line.startswith('+ '):
-            changes["filling_one_diff"].append(line[2:])
-        elif line.startswith('- '):
-            changes["filling_two_diff"].append(line[2:])
-        elif line.startswith('  '):
-            changes["unchanged_count"].append(line[2:])
-    
-    return changes
+    return differences
