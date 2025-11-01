@@ -1,2 +1,6 @@
 fastapi
 uvicorn[standard]
+boto3
+beautifulsoup4
+httpx
+pydantic

@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import boto3
+import os
 
 from fetch_10k_from_sec import fetch_10k_from_sec
 from parse_html_to_text import parse_html_to_text
@@ -9,8 +10,11 @@ from compare_texts import compare_texts
 from extract_cik_from_url import extract_cik_from_url
 
 app = FastAPI()
-session = boto3.Session(profile_name="admin")
-bedrock = session.client(service_name="bedrock-runtime", region_name="us-east-2")
+if os.getenv("env") == "production":
+    bedrock = boto3.client(service_name="bedrock-runtime", region_name="us-east-2")
+else:
+    session = boto3.Session(profile_name="admin")
+    bedrock = session.client(service_name="bedrock-runtime", region_name="us-east-2")
 
 app.add_middleware(
     CORSMiddleware,
