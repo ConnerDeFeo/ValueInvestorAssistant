@@ -12,4 +12,4 @@ async def fetch_10k_from_sec(url: str):
         if response.status_code == 200:
             return response.text
         else:
-            raise Exception(f"Failed to fetch: {response.status_code}")
+            return None

@@ -10,7 +10,6 @@ def parse_html_to_text(html_content: str) -> str:
     # Remove script and style tags
     for script in soup(["script", "style"]):
         script.decompose()
-    
     # Get all text
     full_text = soup.get_text(separator='\n', strip=True)
     
@@ -46,8 +45,6 @@ def parse_html_to_text(html_content: str) -> str:
         # Part IV
         "exhibits_and_financial_statement_schedules": r"Part\s+(4|IV)\s+Item\s+15\s*[\.:-]\s*Exhibits and Financial Statement Schedules",
     }
-
-    # Begin with the business section
     prev  = list(re.finditer(r"(Item)\s+1\s*[\.:-]\s*(Business)", full_text, re.IGNORECASE))
     if not prev:
         raise ValueError("Could not find the Business section in the filing.")
