@@ -69,7 +69,6 @@ def parse_html_to_text(html_content: str) -> str:
         sections[currentTitle] = section_text
         currentMatch = section_match
         currentTitle = key
-    print(len(sections))
     if not sections:
         raise ValueError("Could not find any sections in the filing.")
     return sections

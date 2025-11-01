@@ -34,47 +34,48 @@ async def compare_filings(request: CompareRequest):
     # 3. Diff them
     differences = compare_texts(old_text, new_text)
     
-    total_differences = 0
-    for _, changes in differences.items():
-        total_differences += len(changes["added"]) + len(changes["removed"]) + len(changes["unchanged"])
-    print(f"Total differences found: {total_differences}")
     response = bedrock.converse(
-        modelId = "us.anthropic.claude-3-5-sonnet-20241022-v2:0",
+        modelId = "openai.gpt-oss-120b-1:0",
         messages=[
             {
                 "role": "user", 
                 "content": [{"text": 
                     f"""
-                        You are analyzing 10-K filing changes for a value investor for the following two filings:
-                        Older filing: {request.url1} and newer filing: {request.url2}
+                        You are analyzing 10-K filing changes for a value investor.  
+                        Older filing: {request.url1}  
+                        Newer filing: {request.url2}
 
-                        
-                        The following are the differences between them, with removed being the contents that are 
-                        in the first financial statement and not the second, and added being the contents
-                        that are in the second statement and not the first:
+                        Below are the extracted textual differences between them:  
                         {differences}
 
-                        Your goal is to produce a concise, structured list showing only what changed in each section — not why it changed or what it means.
+                        Your task: produce a concise, structured list showing **only what changed** in each section — 
+                        not why it changed or what it means.
 
-                        Format your output as follows:
+                        Format your output exactly like this:
 
-                        Section Name
+                        ### Section Name
                         - [Change type]: [Short description of what changed]
-                        ... repeat for each change in the section
+                        ... (repeat for each change in the section)
 
-                        Use these change types: Added, Removed, Updated, Expanded, or Minor edits.
-                        Be concise — each bullet should be under 20 words.
-                        If a section has no major changes, write “No major changes.”
-                        Do not provide a title or introduction — just the list of changes. 
-                        Provide your response in markdown format. Use headings for section names.
+                        Use these change types: **Added**, **Removed**, **Updated**, **Expanded**.  
+                        If a section has no major changes, write `No major changes.`  
+                        Do not include updates that are purely formatting, proxy reference, or date shifts.  
+                        Do not include any commentary, title, or introduction — just the list of changes.  
+                        Output must be in **Markdown** format and under **2000 tokens**.
                     """
                 }]
-            }
+            },
         ],
-        inferenceConfig={"maxTokens": 500, "temperature": 0.5}
+        inferenceConfig={"maxTokens": 2000, "temperature": 0}
     )
 
-    raw_text = response["output"]["message"]["content"][0]["text"]
+    content = response["output"]["message"]["content"]
+    print(f"Bedrock response content: {content}")
+    raw_text = "### No Text Generated\nNo summary was produced for this comparison:( Please try again."
+    for item in content:
+        if "text" in item:
+            raw_text = item["text"]
+            break
     return {
         "status": "success",
         "analysis": raw_text,
