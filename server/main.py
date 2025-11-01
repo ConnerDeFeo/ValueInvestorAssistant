@@ -28,6 +28,10 @@ class CompareRequest(BaseModel):
     url1: str
     url2: str
 
+@app.get("/")
+def read_root():
+    return {"status": "ok", "message": "FastAPI is running"}
+
 @app.post("/compare")
 async def compare_filings(request: CompareRequest):
     if request.url1 == request.url2:
