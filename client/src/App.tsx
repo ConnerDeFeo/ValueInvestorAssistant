@@ -13,7 +13,7 @@ function App() {
     setLoading(true);
     setAnalysis(''); // Clear previous analysis
     try {
-      const resp  = await API.post(`${import.meta.env.VITE_API_URL}/compare`, {
+      const resp  = await API.post(`${import.meta.env.VITE_API_URL}/compare_filings`, {
         url1: firstUrl,
         url2: secondUrl
       });

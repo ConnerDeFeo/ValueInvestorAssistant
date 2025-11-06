@@ -131,9 +131,9 @@ def compare_texts(oldText, newText):
 async def compare_filings(event, context):
     body = json.loads(event['body'])
     post_auth_header = {
-        "Access-Control-Allow-Origin": "*",  # Allow from any origin
-        "Access-Control-Allow-Methods": "POST, OPTIONS",  # Allow specific methods
-        "Access-Control-Allow-Headers": "Content-Type, Authorization"  # Allow specific headers
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type"
     }
     try:
         url1 = body['url1']
@@ -204,7 +204,7 @@ async def compare_filings(event, context):
                     raw_text = item["text"]
                     break
             return {
-                "statusCode": "success",
+                "statusCode": 200,
                 "body": json.dumps(raw_text),
                 "headers": post_auth_header
             }
