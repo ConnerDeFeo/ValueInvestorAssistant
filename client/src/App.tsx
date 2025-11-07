@@ -16,6 +16,7 @@ function App() {
     const resp = await secService.searchTickers(ticker);
     if(resp.ok) {
       const data = await resp.json();
+      console.log(data);
       setSearchResults(data);
     }
   }

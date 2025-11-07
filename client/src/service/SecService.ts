@@ -5,7 +5,8 @@ const secService = {
         return await API.post(import.meta.env.VITE_COMPARE_FILINGS_LAMBDA_URL!, { url1, url2 });
     },
     searchTickers: async (query: string) => {
-        return await API.get(`${import.meta.env.VITE_SEARCH_TICKERS_LAMBDA_URL!}?q=${encodeURIComponent(query)}`);
+        console.log("Searching tickers for query:", query);
+        return await API.get(`${import.meta.env.VITE_SEARCH_TICKERS_LAMBDA_URL!}?q=${query}`);
     }
 }
 

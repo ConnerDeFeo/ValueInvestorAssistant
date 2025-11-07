@@ -17,7 +17,10 @@ def search_tickers(event, context):
             }
         # Search for tickers that match the search term
         results = []
-        for cik_str, ticker, name in ALL_TICKERS.values():
+        for item in ALL_TICKERS.values():
+            ticker = item.get('ticker', '')
+            name = item.get('name', '')
+            cik_str = item.get('cik_str', '')
             if search_term in ticker.upper() or search_term in name.upper():
                 results.append({
                     'cik_str': cik_str,
