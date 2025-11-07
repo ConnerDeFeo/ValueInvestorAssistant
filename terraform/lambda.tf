@@ -43,6 +43,10 @@ locals {
     "compare_filings" = {
       source_dir  = "../server/lambdas/compare_filings"
       output_path = "../server/lambdas/zips/compare_filings.zip"
+    },
+    "search_tickers" = {
+      source_dir  = "../server/lambdas/search_tickers"
+      output_path = "../server/lambdas/zips/search_tickers.zip"
     }
   }
 }
