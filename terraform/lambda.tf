@@ -47,6 +47,10 @@ locals {
     "search_tickers" = {
       source_dir  = "../server/lambdas/search_tickers"
       output_path = "../server/lambdas/zips/search_tickers.zip"
+    },
+    "get_available_10k_filings" = {
+      source_dir  = "../server/lambdas/get_available_10k_filings"
+      output_path = "../server/lambdas/zips/get_available_10k_filings.zip"
     }
   }
 }

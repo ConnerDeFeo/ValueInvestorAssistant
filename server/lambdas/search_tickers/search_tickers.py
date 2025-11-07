@@ -19,13 +19,13 @@ def search_tickers(event, context):
         results = []
         for item in ALL_TICKERS.values():
             ticker = item.get('ticker', '')
-            name = item.get('name', '')
+            title = item.get('title', '')
             cik_str = item.get('cik_str', '')
-            if search_term in ticker.upper() or search_term in name.upper():
+            if search_term in ticker.upper() or search_term in title.upper():
                 results.append({
                     'cik_str': cik_str,
                     'ticker': ticker,
-                    'name': name
+                    'title': title
                 })
         return {
             'statusCode': 200,

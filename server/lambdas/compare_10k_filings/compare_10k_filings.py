@@ -178,7 +178,7 @@ def compare_10k_filings(event, context):
                         }]
                     },
                 ],
-                inferenceConfig={"maxTokens": 2500, "temperature": 0}
+                inferenceConfig={"maxTokens": 4000, "temperature": 0}
             )
             content = response["output"]["message"]["content"]
             print("response", response['usage'])
