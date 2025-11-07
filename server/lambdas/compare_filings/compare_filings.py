@@ -6,14 +6,14 @@ import difflib
 import boto3
 
 # Fetch 10-K filing from SEC EDGAR
-async def fetch_10k_from_sec(url: str):
+def fetch_10k_from_sec(url: str):
     headers = {
         "User-Agent": "Conner DeFeo ninjanerozz@gmail.com"
     }
-    
-    async with httpx.AsyncClient() as client:
-        response = await client.get(url, headers=headers, follow_redirects=True)
-        
+
+    with httpx.Client() as client:
+        response = client.get(url, headers=headers, follow_redirects=True)
+
         if response.status_code == 200:
             return response.text
         else:
@@ -128,26 +128,20 @@ def compare_texts(oldText, newText):
 
     return differences
 
-async def compare_filings(event, context):
+def compare_filings(event, context):
     body = json.loads(event['body'])
-    post_auth_header = {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "POST, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type"
-    }
     try:
         url1 = body['url1']
         url2 = body['url2']
         # 1. Fetch both 10-Ks
-        old = await fetch_10k_from_sec(url1.replace('/ix?doc=', ''))
-        new = await fetch_10k_from_sec(url2.replace('/ix?doc=', ''))
+        old = fetch_10k_from_sec(url1.replace('/ix?doc=', ''))
+        new = fetch_10k_from_sec(url2.replace('/ix?doc=', ''))
         if not old or not new:
             return {
                 'statusCode': 500,
                 'body': json.dumps({
                     'message': 'Could not fetch one or both filings.'
-                }),
-                'headers': post_auth_header
+                })
             }
         old_cik = extract_cik_from_url(url1)
         new_cik = extract_cik_from_url(url2)
@@ -156,8 +150,7 @@ async def compare_filings(event, context):
                 'statusCode': 400,
                 'body': json.dumps({
                     'message': 'The two filings must belong to the same company (CIK mismatch).'
-                }),
-                'headers': post_auth_header
+                })
             }
         old_text = parse_html_to_text(old)
         new_text = parse_html_to_text(new)
@@ -172,29 +165,20 @@ async def compare_filings(event, context):
                         "role": "user", 
                         "content": [{"text": 
                             f"""
-                                You are analyzing 10-K filing changes for a value investor.  
-                                Older filing: {url1}  
-                                Newer filing: {url2}
+                                You are a value investor analyzing 10-K changes.
 
-                                Below are the extracted textual differences between them:  
+                                RULES:
+                                - Separate insights by section, with a heading for each section
+                                - If a section has no significant changes, state "No significant changes"
+                                - Each point: max 12 words
+                                - Skip administrative updates (dates, formatting, minor legal updates)
+                                - Format: "• [change summary]" with no analysis. Just the facts.
                                 {differences}
-
-                                Your task: produce a concise **Markdown list of changes per section**, using only these change types: **Added, Removed, Updated, Expanded**.  
-
-                                Rules:
-                                - Include **only substantive changes**; ignore minor wording changes, formatting, proxy references, date shifts, footers, or table-of-contents updates.
-                                - Do not include explanations, analysis, or commentary — only the change type and a short description.
-                                - Format exactly like this:
-                                    ### Section Name
-                                    - [Change type]: [Short description of what changed]
-                                    ... (repeat for each change in the section)
-
-                                If a section has no major changes, write: `No major changes.`
                             """
                         }]
                     },
                 ],
-                inferenceConfig={"maxTokens": 4000, "temperature": 0}
+                inferenceConfig={"maxTokens": 2500, "temperature": 0}
             )
             content = response["output"]["message"]["content"]
             print("response", response['usage'])
@@ -205,8 +189,7 @@ async def compare_filings(event, context):
                     break
             return {
                 "statusCode": 200,
-                "body": json.dumps(raw_text),
-                "headers": post_auth_header
+                "body": json.dumps(raw_text)
             }
         except Exception as e:
             print(f"Error calling Bedrock: {str(e)}")
@@ -214,8 +197,7 @@ async def compare_filings(event, context):
                 'statusCode': 500,
                 'body': json.dumps({
                     'message': 'Error processing differences: {}'.format(str(e))
-                }),
-                'headers': post_auth_header
+                })
             }
     except Exception as e:
         print(f"Error fetching filings: {str(e)}")
@@ -223,6 +205,5 @@ async def compare_filings(event, context):
             'statusCode': 500,
             'body': json.dumps({
                 'message': 'Error recording time input: {}'.format(str(e))
-            }),
-            'headers': post_auth_header
+            })
         }

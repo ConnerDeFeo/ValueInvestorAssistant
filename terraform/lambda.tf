@@ -67,4 +67,27 @@ resource "aws_lambda_function" "lambdas" {
   filename         = data.archive_file.lambda_archives[each.key].output_path
   source_code_hash = data.archive_file.lambda_archives[each.key].output_base64sha256
   timeout          = 120
+  memory_size      = 512
+}
+
+# Give each lambda an endpoint
+resource "aws_lambda_function_url" "lambda_urls" {
+  for_each = aws_lambda_function.lambdas
+
+  function_name = each.value.function_name
+  authorization_type = "NONE"
+
+  cors {
+    allow_origins = ["*"]
+    allow_methods = ["*"]
+    allow_headers = ["*"]
+  }
+}
+
+# Output the Lambda function URLs
+output "lambda_function_urls" {
+  value = {
+    for key, lambda in aws_lambda_function.lambdas :
+    key => aws_lambda_function_url.lambda_urls[key].function_url
+  }
 }
