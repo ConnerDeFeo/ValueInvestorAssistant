@@ -128,7 +128,7 @@ def compare_texts(oldText, newText):
 
     return differences
 
-def compare_filings(event, context):
+def compare_10k_filings(event, context):
     body = json.loads(event['body'])
     try:
         url1 = body['url1']

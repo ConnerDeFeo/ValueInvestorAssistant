@@ -40,9 +40,9 @@ resource "aws_iam_role_policy" "bedrock_policy" {
 # Define local map for Lambda function locations
 locals {
   lambda_function_locations = {
-    "compare_filings" = {
-      source_dir  = "../server/lambdas/compare_filings"
-      output_path = "../server/lambdas/zips/compare_filings.zip"
+    "compare_10k_filings" = {
+      source_dir  = "../server/lambdas/compare_10k_filings"
+      output_path = "../server/lambdas/zips/compare_10k_filings.zip"
     },
     "search_tickers" = {
       source_dir  = "../server/lambdas/search_tickers"
