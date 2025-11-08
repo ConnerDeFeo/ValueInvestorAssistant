@@ -14,7 +14,7 @@ resource "aws_lambda_layer_version" "user_auth" {
 
 # IAM role for Lambda
 resource "aws_iam_role" "lambda_role" {
-  name = "my-lambda-role"
+  name = "findiff_lambda_role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"

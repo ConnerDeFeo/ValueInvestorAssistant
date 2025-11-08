@@ -139,13 +139,13 @@ def compare_10k_filings_worker(event, context):
         job_id = body['jobId']
 
         # Helper to update job status
-        def update_job_status(result):
+        def update_job_status(result, status):
             table.update_item(
                 Key={'job_id': job_id},
                 UpdateExpression='SET #status = :status, result = :result',
                 ExpressionAttributeNames={'#status': 'status'},
                 ExpressionAttributeValues={
-                    ':status': 'FAILED',
+                    ':status': status,
                     ':result': result
                 }
             )
@@ -155,12 +155,12 @@ def compare_10k_filings_worker(event, context):
         new = fetch_10k_from_sec(url2.replace('/ix?doc=', ''))
         if not old or not new:
             # Update status
-            update_job_status("Failed to fetch one or both filings.")
+            update_job_status("Failed to fetch one or both filings.", "FAILED")
             return
         old_cik = extract_cik_from_url(url1)
         new_cik = extract_cik_from_url(url2)
         if old_cik != new_cik:
-            update_job_status("The two filings belong to different companies (CIKs do not match).")
+            update_job_status("The two filings belong to different companies (CIKs do not match).", "FAILED")
             return
         old_text = parse_html_to_text(old)
         new_text = parse_html_to_text(new)
@@ -197,9 +197,9 @@ def compare_10k_filings_worker(event, context):
                 if "text" in item:
                     raw_text = item["text"]
                     break
-            update_job_status(raw_text)
+            update_job_status(raw_text, "COMPLETED")
         except Exception as e:
             print(f"Error calling Bedrock: {str(e)}")
-            update_job_status(f"Error calling Bedrock: {str(e)}")
+            update_job_status(f"Error calling Bedrock: {str(e)}", "FAILED")
     except Exception as e:
         print(f"Error fetching filings: {str(e)}")
