@@ -79,7 +79,7 @@ function App() {
 
             {/* Filing Selection */}
             <div className="border-t border-gray-200 pt-6">
-              <h3 className="text-lg font-semibold findiff-primary-blue mb-4 text-center">Select Two 10-K Filings to Compare</h3>
+              <h3 className="text-lg font-semibold findiff-secondary-blue mb-4 text-center">Select Two 10-K Filings to Compare</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Older Filing</label>
@@ -118,7 +118,7 @@ function App() {
 
         {/* Analysis Results */}
         {analysis && (
-          <div className="bg-white rounded-xl shadow-lg p-8 border-t-4 border-blue-600">
+          <div className="bg-white rounded-xl shadow-lg p-8 border-t-4 findiff-border-primary-blue">
             <MarkDownDisplay markdown={analysis} />
           </div>
         )}

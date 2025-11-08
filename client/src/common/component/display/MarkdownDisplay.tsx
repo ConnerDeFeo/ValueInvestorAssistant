@@ -3,7 +3,7 @@ import ReactMarkdown from 'react-markdown';
 const MarkDownDisplay: React.FC<{ markdown: string }> = ({ markdown }) => {
     return (
         <div className="rounded-lg p-8">
-            <h2 className="text-3xl font-bold text-gray-900 mb-6 text-center border-b pb-2 border-gray-300">Analysis</h2>
+            <h2 className="text-3xl font-bold findiff-secondary-blue mb-6 text-center border-b pb-2 border-gray-300">Analysis</h2>
             <ReactMarkdown
                 components={{
                     h1: ({node, ...props}) =><h1 className="text-2xl findiff-secondary-blue font-bold my-6" {...props}></h1>,
