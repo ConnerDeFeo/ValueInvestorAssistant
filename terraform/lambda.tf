@@ -51,6 +51,29 @@ resource "aws_iam_role_policy" "bedrock_policy" {
   })
 }
 
+# Grant Lambda permissions to access DynamoDB
+resource "aws_iam_role_policy" "lambda_dynamodb" {
+  name = "lambda_dynamodb_policy"
+  role = aws_iam_role.lambda_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "dynamodb:PutItem",
+          "dynamodb:GetItem",
+          "dynamodb:UpdateItem",
+          "dynamodb:Query",
+          "dynamodb:Scan"
+        ]
+        Resource = aws_dynamodb_table.comparison_jobs.arn
+      }
+    ]
+  })
+}
+
 # Define local map for Lambda function locations
 locals {
   lambda_function_locations = {
