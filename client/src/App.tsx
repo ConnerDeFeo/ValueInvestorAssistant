@@ -47,7 +47,6 @@ function App() {
         return;
       }
       const job =  await resp.json();
-      console.log('Job status:', job);
 
       if (job.status === 'COMPLETED' || job.status === 'FAILED') {
         setAnalysis(job.result || 'Comparison failed.');
