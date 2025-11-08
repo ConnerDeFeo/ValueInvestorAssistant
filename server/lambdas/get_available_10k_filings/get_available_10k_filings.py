@@ -1,10 +1,8 @@
 import json
 import requests
-from user_auth import get_auth_header
 
 def get_available_10k_filings(event, context):
     query = event.get("queryStringParameters", {}) or {}
-    auth_header = get_auth_header()
 
     try:
         cik = query["cik"]
@@ -30,13 +28,11 @@ def get_available_10k_filings(event, context):
                 ten_k_filings.append(filing_info)
         return {
             "statusCode": 200,
-            "body": json.dumps(ten_k_filings),
-            "headers": auth_header
+            "body": json.dumps(ten_k_filings)
         }
     except Exception as e:
         print(f"Error: {e}")
         return {
             "statusCode": 500,
-            "body": json.dumps({"error": f"Internal Server Error: {e}"}),
-            "headers": auth_header
+            "body": json.dumps({"error": f"Internal Server Error: {e}"})
         }

@@ -1,5 +1,4 @@
 {
-
     "extraPaths": [
         "Server/layers/user_auth/python"
     ]
