@@ -1,1 +1,37 @@
 @import "tailwindcss";
+
+.findiff-bg-primary-blue{
+    background-color: #1e40af;
+}
+
+.findiff-bg-secondary-blue{
+    background-color: #3b82f6;
+}
+
+.findiff-bg-white{
+    background-color: #f9fafb;
+}
+
+.findiff-border-primary-blue{
+    border-color: #1e40af;
+}
+
+.findiff-border-secondary-blue{
+    border-color: #3b82f6;
+}
+
+.findiff-border-white{
+    border-color: #f9fafb;
+}
+
+.findiff-primary-blue{
+    color: #1e40af;
+}
+
+.findiff-secondary-blue{
+    color: #3b82f6;
+}
+
+.findiff-white{
+    color: #f9fafb;
+}
