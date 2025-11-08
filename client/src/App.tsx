@@ -4,10 +4,10 @@ import SearchStock from "./common/component/SearchStock";
 import type { Stock } from "./common/types/Stock";
 import secService from "./service/SecService";
 import MarkDownDisplay from "./common/component/display/MarkdownDisplay";
+import FinDiffButton from "./common/component/FinDiffButton";
 
 function App() {
   const [analysis, setAnalysis] = useState<string>('');
-  const [loading, setLoading] = useState<boolean>(false);
   const [selectedStock, setSelectedStock] = useState<Stock | undefined>();
   const [available10KFilings, setAvailable10KFilings] = useState<{accessionNumber:string, filingDate:string, primaryDocument:string}[]>([]);
   const [selectedFiling1, setSelectedFiling1] = useState<string>('');
@@ -15,7 +15,6 @@ function App() {
 
   const handleSubmit = async () => {
     if(!selectedFiling1 || !selectedFiling2) return;
-    setLoading(true);
     setAnalysis('');
     const stock1 = available10KFilings.find(filing=>filing.primaryDocument === selectedFiling1);
     const stock2 = available10KFilings.find(filing=>filing.primaryDocument === selectedFiling2);
@@ -26,7 +25,6 @@ function App() {
       const data = await resp.json();
       setAnalysis(data);
     }
-    setLoading(false);
   }
 
   const fetchAvailable10KFilings = async (cik:string) => {
@@ -49,13 +47,9 @@ function App() {
         <div className="mt-4 p-4 border border-gray-300 rounded-md">
           <div className="flex flex-row justify-between">
             <h1 className="font-bold text-3xl mb-2">{selectedStock.title}</h1>
-            <button 
-              className="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600 disabled:bg-gray-400 cursor-pointer"
-              onClick={handleSubmit}
-              disabled={!selectedFiling1 || !selectedFiling2 || loading}
-            >
-              {loading ? 'Comparing...' : 'Compare Filings'}
-            </button>
+            <FinDiffButton onClick={handleSubmit} disabled={!selectedFiling1 || !selectedFiling2}>
+              Compare Filings
+            </FinDiffButton>
           </div>
           <p><strong>Ticker:</strong> {selectedStock.ticker}</p>
           <p><strong>CIK:</strong> {selectedStock.cik_str}</p>
