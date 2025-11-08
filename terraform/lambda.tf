@@ -96,6 +96,23 @@ locals {
   }
 }
 
+# Allow Lambda to invoke other Lambda functions
+resource "aws_iam_role_policy" "lambda_invoke_worker" {
+  name = "lambda_invoke_worker_policy"
+  role = aws_iam_role.lambda_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = "lambda:InvokeFunction"
+        Resource = "arn:aws:lambda:us-east-2:857360184083:function:*"
+      }
+    ]
+  })
+}
+
 # Archive files using for_each
 data "archive_file" "lambda_archives" {
   for_each = local.lambda_function_locations

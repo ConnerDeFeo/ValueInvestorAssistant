@@ -39,7 +39,7 @@ def compare_10k_filings(event, context):
         return {
             'statusCode': 202,  # Accepted
             'headers': auth_header,
-            'body': json.dumps({'job_id': job_id})
+            'body': json.dumps(job_id)
         }
     except Exception as e:
         return {

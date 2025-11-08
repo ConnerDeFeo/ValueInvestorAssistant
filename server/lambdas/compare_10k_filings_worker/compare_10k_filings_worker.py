@@ -132,18 +132,17 @@ dynamodb = boto3.resource('dynamodb')
 table = dynamodb.Table('comparison_jobs') # type: ignore
 
 def compare_10k_filings_worker(event, context):
-    body = json.loads(event['body'])
     try:
-        url1 = body['url1']
-        url2 = body['url2']
-        job_id = body['jobId']
+        url1 = event['url1']
+        url2 = event['url2']
+        job_id = event['jobId']
 
         # Helper to update job status
         def update_job_status(result, status):
             table.update_item(
                 Key={'job_id': job_id},
-                UpdateExpression='SET #status = :status, result = :result',
-                ExpressionAttributeNames={'#status': 'status'},
+                UpdateExpression='SET #status = :status, #result = :result',
+                ExpressionAttributeNames={'#status': 'status', "#result": "result"},
                 ExpressionAttributeValues={
                     ':status': status,
                     ':result': result
