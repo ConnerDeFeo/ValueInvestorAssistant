@@ -1,9 +1,6 @@
-import boto3
 import json
 from user_auth import get_auth_header
-
-dynamodb = boto3.resource('dynamodb')
-table = dynamodb.Table('comparison_jobs') # type: ignore
+from dynamo import get_item
 
 def get_comparison_status(event, context):
     query_params = event.get('queryStringParameters', {})
@@ -11,15 +8,10 @@ def get_comparison_status(event, context):
     
     try:
         job_id = query_params['jobId']
-        response = table.get_item(Key={'job_id': job_id})
-        if 'Item' not in response:
-            return {
-                'statusCode': 404,
-                'body': 'Job ID not found'
-            }
+        response = get_item('comparison_jobs', {'job_id': job_id})
         return {
             'statusCode': 200,
-            'body': json.dumps(response['Item']),
+            'body': json.dumps(response),
             'headers': auth_header
         }
     except Exception as e:

@@ -11,6 +11,9 @@ const secService = {
     },
     getAvailable10KFilings: async (cik: string) => {
         return await API.get(`${URL}/get_available_10k_filings?cik=${cik}`);
+    },
+    getComparisonStatus: async (jobId: string) => {
+        return await API.get(`${URL}/get_comparison_status?jobId=${jobId}`);
     }
 }
 

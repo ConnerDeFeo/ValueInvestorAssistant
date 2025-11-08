@@ -1,3 +1,29 @@
+# Define local map for Lambda function locations
+locals {
+  lambda_function_locations = {
+    "compare_10k_filings" = {
+      source_dir  = "../server/lambdas/compare_10k_filings"
+      output_path = "../server/lambdas/zips/compare_10k_filings.zip"
+    },
+    "compare_10k_filings_worker" = {
+      source_dir  = "../server/lambdas/compare_10k_filings_worker"
+      output_path = "../server/lambdas/zips/compare_10k_filings_worker.zip"
+    },
+    "search_tickers" = {
+      source_dir  = "../server/lambdas/search_tickers"
+      output_path = "../server/lambdas/zips/search_tickers.zip"
+    },
+    "get_available_10k_filings" = {
+      source_dir  = "../server/lambdas/get_available_10k_filings"
+      output_path = "../server/lambdas/zips/get_available_10k_filings.zip"
+    },
+    "get_comparison_status" = {
+      source_dir  = "../server/lambdas/get_comparison_status"
+      output_path = "../server/lambdas/zips/get_comparison_status.zip"
+    }
+  }
+}
+
 # Data for user auth layer
 data "archive_file" "user_auth_layer" {
   type        = "zip"
@@ -86,28 +112,6 @@ resource "aws_iam_role_policy" "lambda_dynamodb" {
       }
     ]
   })
-}
-
-# Define local map for Lambda function locations
-locals {
-  lambda_function_locations = {
-    "compare_10k_filings" = {
-      source_dir  = "../server/lambdas/compare_10k_filings"
-      output_path = "../server/lambdas/zips/compare_10k_filings.zip"
-    },
-    "compare_10k_filings_worker" = {
-      source_dir  = "../server/lambdas/compare_10k_filings_worker"
-      output_path = "../server/lambdas/zips/compare_10k_filings_worker.zip"
-    },
-    "search_tickers" = {
-      source_dir  = "../server/lambdas/search_tickers"
-      output_path = "../server/lambdas/zips/search_tickers.zip"
-    },
-    "get_available_10k_filings" = {
-      source_dir  = "../server/lambdas/get_available_10k_filings"
-      output_path = "../server/lambdas/zips/get_available_10k_filings.zip"
-    }
-  }
 }
 
 # Allow Lambda to invoke other Lambda functions

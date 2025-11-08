@@ -4,9 +4,11 @@ locals {
     # GET Lambdas
     "search_tickers" = {lambda = aws_lambda_function.lambdas["search_tickers"], method = "GET"}
     "get_available_10k_filings" = {lambda = aws_lambda_function.lambdas["get_available_10k_filings"], method = "GET"}
+    "get_comparison_status" = {lambda = aws_lambda_function.lambdas["get_comparison_status"], method = "GET"}
 
     # POST Lambdas
     "compare_10k_filings" = {lambda = aws_lambda_function.lambdas["compare_10k_filings"], method = "POST"}
+
     # DELETE Lambdas
   }
 }
@@ -134,6 +136,15 @@ resource "aws_api_gateway_deployment" "api_deployment" {
   ]
 
   rest_api_id = aws_api_gateway_rest_api.main.id
+
+  triggers = {
+    redeployment = sha1(jsonencode(local.lambdas))
+  }
+
+  # Add this lifecycle block
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 # Create API Gateway Stages

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import './global.css'
 import SearchStock from "./common/component/SearchStock";
 import type { Stock } from "./common/types/Stock";
@@ -8,6 +8,7 @@ import FinDiffButton from "./common/component/FinDiffButton";
 
 function App() {
   const [analysis, setAnalysis] = useState<string>('');
+  const [jobId, setJobId] = useState<string>('');
   const [selectedStock, setSelectedStock] = useState<Stock | undefined>();
   const [available10KFilings, setAvailable10KFilings] = useState<{accessionNumber:string, filingDate:string, primaryDocument:string}[]>([]);
   const [selectedOlderFilingDate, setSelectedOlderFilingDate] = useState<string>('');
@@ -24,10 +25,34 @@ function App() {
     const resp = await secService.compare10KFilings(url1, url2);
 
     if(resp.ok){
-      const data = await resp.json();
-      setAnalysis(data);
+      const jobId = await resp.json();
+      setJobId(jobId);
     }
   }
+
+  useEffect(()=>{
+    const poll = async () => {
+      const resp = await secService.getComparisonStatus(jobId);
+      if(!resp.ok) {
+        setAnalysis('Error fetching comparison status.');
+        return;
+      }
+      const job =  await resp.json();
+      console.log('Job status:', job);
+
+      if (job.status === 'COMPLETED' || job.status === 'FAILED') {
+        setAnalysis(job.result || 'Comparison failed.');
+        return;
+      }
+
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      poll();
+    };
+    if(jobId){
+      poll();
+      setJobId('');
+    }
+  }, [jobId]);
 
   const fetchAvailable10KFilings = async (cik:string) => {
     const resp = await secService.getAvailable10KFilings(cik);
@@ -41,6 +66,7 @@ function App() {
     fetchAvailable10KFilings(stock.cik_str);
     setSelectedStock(stock);
   }
+
   return (
     <div className="min-h-screen findiff-bg-white">
       <div className="max-w-5xl mx-auto p-6 pt-12">
