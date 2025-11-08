@@ -61,7 +61,7 @@ const SearchStock : React.FC<{onSelect: (stock: Stock) => void}> = ({ onSelect }
                     value={ticker}
                     onChange={(e) => setTicker(e.target.value)}
                     className="w-full border border-gray-300 rounded-md p-2"
-                    placeholder="Enter ticker symbol"
+                    placeholder="Enter ticker symbol or name..."
                     onKeyDown={e=>e.key === "Enter" && handleSearchTicker()}
                     onBlur={()=>setTimeout(()=>setSearchResults([]), 100)} // Delay to allow click selection
                 />

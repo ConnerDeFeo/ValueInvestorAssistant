@@ -10,16 +10,16 @@ function App() {
   const [analysis, setAnalysis] = useState<string>('');
   const [selectedStock, setSelectedStock] = useState<Stock | undefined>();
   const [available10KFilings, setAvailable10KFilings] = useState<{accessionNumber:string, filingDate:string, primaryDocument:string}[]>([]);
-  const [selectedFiling1, setSelectedFiling1] = useState<string>('');
-  const [selectedFiling2, setSelectedFiling2] = useState<string>('');
+  const [selectedOlderFiling, setSelectedOlderFiling] = useState<string>('');
+  const [selectedNewerFiling, setselectedNewerFiling] = useState<string>('');
 
   const handleSubmit = async () => {
-    if(!selectedFiling1 || !selectedFiling2) return;
+    if(!selectedOlderFiling || !selectedNewerFiling) return;
     setAnalysis('');
-    const stock1 = available10KFilings.find(filing=>filing.primaryDocument === selectedFiling1);
-    const stock2 = available10KFilings.find(filing=>filing.primaryDocument === selectedFiling2);
-    const url1 = `https://www.sec.gov/Archives/edgar/data/${selectedStock?.cik_str}/${stock1?.accessionNumber.replace(/-/g, '')}/${selectedFiling1}`;
-    const url2 = `https://www.sec.gov/Archives/edgar/data/${selectedStock?.cik_str}/${stock2?.accessionNumber.replace(/-/g, '')}/${selectedFiling2}`;
+    const stock1 = available10KFilings.find(filing=>filing.primaryDocument === selectedOlderFiling);
+    const stock2 = available10KFilings.find(filing=>filing.primaryDocument === selectedNewerFiling);
+    const url1 = `https://www.sec.gov/Archives/edgar/data/${selectedStock?.cik_str}/${stock1?.accessionNumber.replace(/-/g, '')}/${selectedOlderFiling}`;
+    const url2 = `https://www.sec.gov/Archives/edgar/data/${selectedStock?.cik_str}/${stock2?.accessionNumber.replace(/-/g, '')}/${selectedNewerFiling}`;
     const resp = await secService.compare10KFilings(url1, url2);
     if(resp.ok){
       const data = await resp.json();
@@ -72,7 +72,7 @@ function App() {
                   </p>
                 </div>
               </div>
-              <FinDiffButton onClick={handleSubmit} disabled={!selectedFiling1 || !selectedFiling2}>
+              <FinDiffButton onClick={handleSubmit} disabled={!selectedOlderFiling || !selectedNewerFiling}>
                 Compare Filings
               </FinDiffButton>
             </div>
@@ -85,12 +85,12 @@ function App() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">Older Filing</label>
                   <select 
                     className="w-full border-2 border-gray-300 rounded-lg p-3 cursor-pointer hover:border-blue-500 focus:border-blue-800 focus:ring-2 focus:ring-blue-200 transition-all" 
-                    value={selectedFiling1} 
-                    onChange={e => setSelectedFiling1(e.target.value)}
+                    value={selectedOlderFiling} 
+                    onChange={e => setSelectedOlderFiling(e.target.value)}
                   >
                     <option value="" className="cursor-pointer">Select a filing</option>
-                    {available10KFilings.map(filing=>(
-                      <option key={filing.accessionNumber} value={filing.primaryDocument} className="cursor-pointer">
+                    {available10KFilings.map(filing=> (!selectedNewerFiling || filing.filingDate < selectedNewerFiling) && (
+                      <option key={filing.accessionNumber} value={filing.filingDate} className="cursor-pointer">
                         {filing.filingDate.split('-')[0]}
                       </option>
                     ))}
@@ -100,12 +100,12 @@ function App() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">Newer Filing</label>
                   <select 
                     className="w-full border-2 border-gray-300 rounded-lg p-3 cursor-pointer hover:border-blue-500 focus:border-blue-800 focus:ring-2 focus:ring-blue-200 transition-all" 
-                    value={selectedFiling2} 
-                    onChange={e=>setSelectedFiling2(e.target.value)}
+                    value={selectedNewerFiling} 
+                    onChange={e=>setselectedNewerFiling(e.target.value)}
                   >
                     <option value="">Select a filing</option>
-                    {available10KFilings.map(filing=>(
-                      <option key={filing.accessionNumber} value={filing.primaryDocument}>
+                    {available10KFilings.map(filing=>(!selectedOlderFiling || filing.filingDate > selectedOlderFiling) && (
+                      <option key={filing.accessionNumber} value={filing.filingDate}>
                         {filing.filingDate.split('-')[0]}
                       </option>
                     ))}

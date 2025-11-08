@@ -101,7 +101,7 @@ def compare_texts(oldText, newText):
     differences = {}
     for key in oldText.keys():
         if key not in newText:
-            raise ValueError(f"Section {key} not found in second text for comparison.")
+            continue
         # Split into lines for comparison
         lines1 = oldText[key].splitlines(keepends=True)
         lines2 = newText[key].splitlines(keepends=True)
