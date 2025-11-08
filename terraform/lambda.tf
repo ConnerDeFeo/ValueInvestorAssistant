@@ -5,11 +5,25 @@ data "archive_file" "user_auth_layer" {
   output_path = "${path.module}/../server/layers/user_auth/user_auth.zip"
 }
 
+# Data for user dynamodb layer
+data "archive_file" "dynamo_layer" {
+  type        = "zip"
+  source_dir  = "${path.module}/../server/layers/dynamo/"
+  output_path = "${path.module}/../server/layers/dynamo/dynamodb.zip"
+}
+
 resource "aws_lambda_layer_version" "user_auth" {
   filename         = data.archive_file.user_auth_layer.output_path
   layer_name       = "user_auth"
   compatible_runtimes = ["python3.12"]
   source_code_hash = data.archive_file.user_auth_layer.output_base64sha256
+}
+
+resource "aws_lambda_layer_version" "dynamo" {
+  filename         = data.archive_file.dynamo_layer.output_path
+  layer_name       = "dynamo"
+  compatible_runtimes = ["python3.12"]
+  source_code_hash = data.archive_file.dynamo_layer.output_base64sha256
 }
 
 # IAM role for Lambda
@@ -135,5 +149,5 @@ resource "aws_lambda_function" "lambdas" {
   timeout          = 120
   memory_size      = 512
 
-  layers           = [aws_lambda_layer_version.user_auth.arn]
+  layers           = [aws_lambda_layer_version.user_auth.arn, aws_lambda_layer_version.dynamo.arn]
 }

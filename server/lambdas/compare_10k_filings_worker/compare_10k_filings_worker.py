@@ -1,8 +1,8 @@
-import json
 import httpx
 import re
 from bs4 import BeautifulSoup
 import difflib
+from dynamo import update_item
 import boto3
 
 # Fetch 10-K filing from SEC EDGAR
@@ -128,9 +128,6 @@ def compare_texts(oldText, newText):
 
     return differences
 
-dynamodb = boto3.resource('dynamodb')
-table = dynamodb.Table('comparison_jobs') # type: ignore
-
 def compare_10k_filings_worker(event, context):
     try:
         url1 = event['url1']
@@ -139,11 +136,12 @@ def compare_10k_filings_worker(event, context):
 
         # Helper to update job status
         def update_job_status(result, status):
-            table.update_item(
-                Key={'job_id': job_id},
-                UpdateExpression='SET #status = :status, #result = :result',
-                ExpressionAttributeNames={'#status': 'status', "#result": "result"},
-                ExpressionAttributeValues={
+            update_item(
+                'comparison_jobs',
+                key={'job_id': job_id},
+                update_expression='SET #status = :status, #result = :result',
+                expression_attribute_names={'#status': 'status', "#result": "result"},
+                expression_attribute_values={
                     ':status': status,
                     ':result': result
                 }

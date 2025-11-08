@@ -3,10 +3,9 @@ import json
 import boto3
 import uuid
 from user_auth import post_auth_header
+from dynamo import put_item
 
 lambda_client = boto3.client('lambda')
-dynamodb = boto3.resource('dynamodb')
-table = dynamodb.Table('comparison_jobs')  # type: ignore
 
 def compare_10k_filings(event, context):
     body = json.loads(event['body'])
@@ -20,7 +19,7 @@ def compare_10k_filings(event, context):
         job_id = str(uuid.uuid4())
         
         # Store initial job status
-        table.put_item(Item={
+        put_item('comparison_jobs', {
             'job_id': job_id,
             'status': 'PROCESSING',
         })
