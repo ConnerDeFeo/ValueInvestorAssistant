@@ -18,8 +18,8 @@ function App() {
     setAnalysis('');
     const stock1 = available10KFilings.find(filing=>filing.primaryDocument === selectedOlderFiling);
     const stock2 = available10KFilings.find(filing=>filing.primaryDocument === selectedNewerFiling);
-    const url1 = `https://www.sec.gov/Archives/edgar/data/${selectedStock?.cik_str}/${stock1?.accessionNumber.replace(/-/g, '')}/${selectedOlderFiling}`;
-    const url2 = `https://www.sec.gov/Archives/edgar/data/${selectedStock?.cik_str}/${stock2?.accessionNumber.replace(/-/g, '')}/${selectedNewerFiling}`;
+    const url1 = `https://www.sec.gov/Archives/edgar/data/${selectedStock?.cik_str}/${stock1?.accessionNumber.replace(/-/g, '')}/${stock1?.primaryDocument}`;
+    const url2 = `https://www.sec.gov/Archives/edgar/data/${selectedStock?.cik_str}/${stock2?.accessionNumber.replace(/-/g, '')}/${stock2?.primaryDocument}`;
     const resp = await secService.compare10KFilings(url1, url2);
     if(resp.ok){
       const data = await resp.json();
