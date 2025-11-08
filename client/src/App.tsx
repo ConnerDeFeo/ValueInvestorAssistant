@@ -5,6 +5,7 @@ import type { Stock } from "./common/types/Stock";
 import secService from "./service/SecService";
 import MarkDownDisplay from "./common/component/display/MarkdownDisplay";
 import FinDiffButton from "./common/component/FinDiffButton";
+import Spinner from "./common/component/display/Spinner";
 
 function App() {
   const [analysis, setAnalysis] = useState<string>('');
@@ -13,6 +14,7 @@ function App() {
   const [available10KFilings, setAvailable10KFilings] = useState<{accessionNumber:string, filingDate:string, primaryDocument:string}[]>([]);
   const [selectedOlderFilingDate, setSelectedOlderFilingDate] = useState<string>('');
   const [selectedNewerFilingDate, setSelectedNewerFilingDate] = useState<string>('');
+  const [awaitingAnalysis, setAwaitingAnalysis] = useState<boolean>(false);
 
   const handleSubmit = async () => {
     if(!selectedOlderFilingDate || !selectedNewerFilingDate) return;
@@ -31,10 +33,17 @@ function App() {
   }
 
   useEffect(()=>{
-    const poll = async () => {
+    const poll = async (attempt: number) => {
+      if (attempt >= 45) {
+        setAnalysis('Analysis timed out. Please try again later.');
+        setAwaitingAnalysis(false);
+        return;
+      }
+      setAwaitingAnalysis(true);
       const resp = await secService.getComparisonStatus(jobId);
       if(!resp.ok) {
         setAnalysis('Error fetching comparison status.');
+        setAwaitingAnalysis(false);
         return;
       }
       const job =  await resp.json();
@@ -42,14 +51,15 @@ function App() {
 
       if (job.status === 'COMPLETED' || job.status === 'FAILED') {
         setAnalysis(job.result || 'Comparison failed.');
+        setAwaitingAnalysis(false);
         return;
       }
 
       await new Promise(resolve => setTimeout(resolve, 2000));
-      poll();
+      poll(attempt + 1);
     };
     if(jobId){
-      poll();
+      poll(0);
       setJobId('');
     }
   }, [jobId]);
@@ -100,7 +110,7 @@ function App() {
                   </p>
                 </div>
               </div>
-              <FinDiffButton onClick={handleSubmit} disabled={!selectedOlderFilingDate || !selectedNewerFilingDate}>
+              <FinDiffButton onClick={handleSubmit} disabled={!selectedOlderFilingDate || !selectedNewerFilingDate || awaitingAnalysis}>
                 Compare Filings
               </FinDiffButton>
             </div>
@@ -145,9 +155,16 @@ function App() {
         )}
 
         {/* Analysis Results */}
-        {analysis && (
+        {(analysis || awaitingAnalysis) && (
           <div className="bg-white rounded-xl shadow-lg p-8 border-t-4 findiff-border-primary-blue">
-            <MarkDownDisplay markdown={analysis} />
+            { awaitingAnalysis ? 
+            <div className="flex justify-center items-center">
+              <Spinner />
+              This may take a few moments.
+            </div>
+              :
+              <MarkDownDisplay markdown={analysis} />
+            }
           </div>
         )}
       </div>
