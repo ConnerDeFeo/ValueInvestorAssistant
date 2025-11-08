@@ -1,7 +1,7 @@
-const Spinner = () => {
+const Spinner:React.FC<{className?:string}> = ({className}) => {
     return (
         <svg
-            className="animate-spin h-5 w-5 mr-2 text-current"
+            className={`animate-spin h-5 w-5 mr-2 text-current ${className}`}
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"

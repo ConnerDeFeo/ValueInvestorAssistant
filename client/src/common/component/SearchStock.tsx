@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import secService from "../../service/SecService";
 import type { Stock } from "../types/Stock";
+import Spinner from "./display/Spinner";
 
 /**
  * SearchTicker Component
@@ -13,27 +14,34 @@ const SearchStock : React.FC<{onSelect: (stock: Stock) => void}> = ({ onSelect }
     // State for storing search results from the API
     const [searchResults, setSearchResults] = useState<Array<Stock>>([]);
 
+    // Loading state to indicate ongoing search
+    const [loading, setLoading] = useState<boolean>(false);
+
     /**
      * Fetches ticker search results from the SEC service
      */
     const handleSearchTicker = async () => {
+        setLoading(true);
         const resp = await secService.searchTickers(ticker);
         if(resp.ok) {
             const data = await resp.json();
             setSearchResults(data);
         }
+        setLoading(false);
     }
 
     // Auto-search debounce effect: triggers search 500ms after user stops typing
     useEffect(() => {
+        setLoading(true);
         const delayDebounceFn = setTimeout(() => {
+            setLoading(true);
             if(ticker.length > 0) {
                 handleSearchTicker();
             }
         }, 500);
 
         // Cleanup: clear timeout if ticker changes before 500ms
-        return () => clearTimeout(delayDebounceFn);
+        return () => {clearTimeout(delayDebounceFn); setLoading(false);};
     }, [ticker]);
 
     const handleStockSelect = (stock: Stock) => {
@@ -67,13 +75,15 @@ const SearchStock : React.FC<{onSelect: (stock: Stock) => void}> = ({ onSelect }
             </div>
             
             {/* Results list - only shown when results exist */}
-            {searchResults.length > 0 && (
+            {(searchResults.length > 0 || ticker) && (
                 <ul className="border border-gray-300 rounded-md p-4 mb-4 max-h-60 overflow-y-auto absolute bg-white w-full z-10">
-                    {searchResults.map((result, index) => (
+                    {searchResults.length > 0 ? searchResults.map((result, index) => (
                         <li key={index} className="mb-2 cursor-pointer hover:bg-gray-100 p-2 rounded" onClick={() => handleStockSelect(result)}>
                             <strong>{result.ticker}</strong> - {result.title} (CIK: {result.cik_str})
                         </li>
-                    ))}
+                    )) : (
+                        loading ? <Spinner /> : <li className="mb-2 p-2 text-gray-500">No results found</li>
+                    )}
                 </ul>
             )}
         </div>

@@ -54,15 +54,15 @@ function App() {
           <p><strong>Ticker:</strong> {selectedStock.ticker}</p>
           <p><strong>CIK:</strong> {selectedStock.cik_str}</p>
           <div className="w-full flex justify-between max-w-xl mx-auto">
-            <select className="border border-gray-300 rounded-md p-2" value={selectedFiling1} onChange={e => setSelectedFiling1(e.target.value)}>
-              <option value="">Select a filing</option>
+            <select className="border border-gray-300 rounded-md p-2 cursor-pointer" value={selectedFiling1} onChange={e => setSelectedFiling1(e.target.value)}>
+              <option value="" className="cursor-pointer">Select a filing</option>
               {available10KFilings.map(filing=>(
-                <option key={filing.accessionNumber} value={filing.primaryDocument}>
+                <option key={filing.accessionNumber} value={filing.primaryDocument} className="cursor-pointer">
                   {filing.filingDate.split('-')[0]}
                 </option>
               ))}
             </select>
-            <select className="border border-gray-300 rounded-md p-2" value={selectedFiling2} onChange={e=>setSelectedFiling2(e.target.value)}>
+            <select className="border border-gray-300 rounded-md p-2 cursor-pointer" value={selectedFiling2} onChange={e=>setSelectedFiling2(e.target.value)}>
               <option value="">Select a filing</option>
               {available10KFilings.map(filing=>(
                 <option key={filing.accessionNumber} value={filing.primaryDocument}>
