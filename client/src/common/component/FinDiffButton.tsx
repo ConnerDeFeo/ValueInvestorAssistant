@@ -20,8 +20,8 @@ const FinDiffButton: React.FC<{children: React.ReactNode, onClick: () => void | 
     <button
         onClick={handleClick}
         disabled={loadingState || disabled}
-        className={` findiff-bg-secondary-blue cursor-pointer hover:opacity-90
-            text-white px-5 py-2 rounded-lg
+        className={` findiff-bg-secondary-blue
+            text-white px-5 py-2 rounded-lg ${disabled ? "opacity-50 cursor-not-allowed" : "hover:opacity-90 cursor-pointer"}
             ${loadingState ? "opacity-50 cursor-not-allowed" : ""}
         `}
     >

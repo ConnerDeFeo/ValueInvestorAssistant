@@ -10,17 +10,19 @@ function App() {
   const [analysis, setAnalysis] = useState<string>('');
   const [selectedStock, setSelectedStock] = useState<Stock | undefined>();
   const [available10KFilings, setAvailable10KFilings] = useState<{accessionNumber:string, filingDate:string, primaryDocument:string}[]>([]);
-  const [selectedOlderFiling, setSelectedOlderFiling] = useState<string>('');
-  const [selectedNewerFiling, setselectedNewerFiling] = useState<string>('');
+  const [selectedOlderFilingDate, setSelectedOlderFilingDate] = useState<string>('');
+  const [selectedNewerFilingDate, setSelectedNewerFilingDate] = useState<string>('');
 
   const handleSubmit = async () => {
-    if(!selectedOlderFiling || !selectedNewerFiling) return;
+    if(!selectedOlderFilingDate || !selectedNewerFilingDate) return;
     setAnalysis('');
-    const stock1 = available10KFilings.find(filing=>filing.primaryDocument === selectedOlderFiling);
-    const stock2 = available10KFilings.find(filing=>filing.primaryDocument === selectedNewerFiling);
+
+    const stock1 = available10KFilings.find(filing=>filing.filingDate === selectedOlderFilingDate);
+    const stock2 = available10KFilings.find(filing=>filing.filingDate === selectedNewerFilingDate);
     const url1 = `https://www.sec.gov/Archives/edgar/data/${selectedStock?.cik_str}/${stock1?.accessionNumber.replace(/-/g, '')}/${stock1?.primaryDocument}`;
     const url2 = `https://www.sec.gov/Archives/edgar/data/${selectedStock?.cik_str}/${stock2?.accessionNumber.replace(/-/g, '')}/${stock2?.primaryDocument}`;
     const resp = await secService.compare10KFilings(url1, url2);
+
     if(resp.ok){
       const data = await resp.json();
       setAnalysis(data);
@@ -72,7 +74,7 @@ function App() {
                   </p>
                 </div>
               </div>
-              <FinDiffButton onClick={handleSubmit} disabled={!selectedOlderFiling || !selectedNewerFiling}>
+              <FinDiffButton onClick={handleSubmit} disabled={!selectedOlderFilingDate || !selectedNewerFilingDate}>
                 Compare Filings
               </FinDiffButton>
             </div>
@@ -85,11 +87,11 @@ function App() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">Older Filing</label>
                   <select 
                     className="w-full border-2 border-gray-300 rounded-lg p-3 cursor-pointer hover:border-blue-500 focus:border-blue-800 focus:ring-2 focus:ring-blue-200 transition-all" 
-                    value={selectedOlderFiling} 
-                    onChange={e => setSelectedOlderFiling(e.target.value)}
+                    value={selectedOlderFilingDate} 
+                    onChange={e => setSelectedOlderFilingDate(e.target.value)}
                   >
                     <option value="" className="cursor-pointer">Select a filing</option>
-                    {available10KFilings.map(filing=> (!selectedNewerFiling || filing.filingDate < selectedNewerFiling) && (
+                    {available10KFilings.map(filing=> (!selectedNewerFilingDate || filing.filingDate < selectedNewerFilingDate) && (
                       <option key={filing.accessionNumber} value={filing.filingDate} className="cursor-pointer">
                         {filing.filingDate.split('-')[0]}
                       </option>
@@ -100,11 +102,11 @@ function App() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">Newer Filing</label>
                   <select 
                     className="w-full border-2 border-gray-300 rounded-lg p-3 cursor-pointer hover:border-blue-500 focus:border-blue-800 focus:ring-2 focus:ring-blue-200 transition-all" 
-                    value={selectedNewerFiling} 
-                    onChange={e=>setselectedNewerFiling(e.target.value)}
+                    value={selectedNewerFilingDate} 
+                    onChange={e=>setSelectedNewerFilingDate(e.target.value)}
                   >
                     <option value="">Select a filing</option>
-                    {available10KFilings.map(filing=>(!selectedOlderFiling || filing.filingDate > selectedOlderFiling) && (
+                    {available10KFilings.map(filing=>(!selectedOlderFilingDate || filing.filingDate > selectedOlderFilingDate) && (
                       <option key={filing.accessionNumber} value={filing.filingDate}>
                         {filing.filingDate.split('-')[0]}
                       </option>
