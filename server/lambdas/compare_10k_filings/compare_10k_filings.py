@@ -4,6 +4,7 @@ import re
 from bs4 import BeautifulSoup
 import difflib
 import boto3
+from user_auth import post_auth_header
 
 # Fetch 10-K filing from SEC EDGAR
 def fetch_10k_from_sec(url: str):
@@ -28,7 +29,7 @@ def extract_cik_from_url(url):
         return match.group(1).lstrip('0')  # remove leading zeros
     return None
 
-def parse_html_to_text(html_content: str) -> str:
+def parse_html_to_text(html_content):
     """
     Extract key sections from a 10-K filing
     """
@@ -130,6 +131,7 @@ def compare_texts(oldText, newText):
 
 def compare_10k_filings(event, context):
     body = json.loads(event['body'])
+    auth_header = post_auth_header()
     try:
         url1 = body['url1']
         url2 = body['url2']
@@ -141,7 +143,8 @@ def compare_10k_filings(event, context):
                 'statusCode': 500,
                 'body': json.dumps({
                     'message': 'Could not fetch one or both filings.'
-                })
+                }),
+                'headers': auth_header
             }
         old_cik = extract_cik_from_url(url1)
         new_cik = extract_cik_from_url(url2)
@@ -150,7 +153,8 @@ def compare_10k_filings(event, context):
                 'statusCode': 400,
                 'body': json.dumps({
                     'message': 'The two filings must belong to the same company (CIK mismatch).'
-                })
+                }),
+                'headers': auth_header
             }
         old_text = parse_html_to_text(old)
         new_text = parse_html_to_text(new)
@@ -189,7 +193,8 @@ def compare_10k_filings(event, context):
                     break
             return {
                 "statusCode": 200,
-                "body": json.dumps(raw_text)
+                "body": json.dumps(raw_text),
+                "headers": auth_header
             }
         except Exception as e:
             print(f"Error calling Bedrock: {str(e)}")
@@ -197,7 +202,8 @@ def compare_10k_filings(event, context):
                 'statusCode': 500,
                 'body': json.dumps({
                     'message': 'Error processing differences: {}'.format(str(e))
-                })
+                }),
+                'headers': auth_header
             }
     except Exception as e:
         print(f"Error fetching filings: {str(e)}")
@@ -205,5 +211,6 @@ def compare_10k_filings(event, context):
             'statusCode': 500,
             'body': json.dumps({
                 'message': 'Error recording time input: {}'.format(str(e))
-            })
+            }),
+            'headers': auth_header
         }

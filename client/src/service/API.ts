@@ -1,5 +1,3 @@
-
-
 const API = {
     get: async (path: string): Promise<Response> => {
         return await fetch(path, {

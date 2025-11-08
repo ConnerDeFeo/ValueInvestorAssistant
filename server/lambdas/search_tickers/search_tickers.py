@@ -1,5 +1,6 @@
 import json
 import os
+from user_auth import get_auth_header
 
 TICKER_FILE = os.path.join(os.path.dirname(__file__), 'tickers.json')
 with open(TICKER_FILE) as f:
@@ -8,12 +9,15 @@ print(f"Loaded {len(ALL_TICKERS)} tickers.")
 
 def search_tickers(event, context):
     query = event.get('queryStringParameters', {})
+    auth_header = get_auth_header()
+
     try:
         search_term = query.get('q', '').upper()
         if not search_term:
             return {
                 'statusCode': 400,
-                'body': json.dumps({'message': 'Query parameter "q" is required.'})
+                'body': json.dumps({'message': 'Query parameter "q" is required.'}),
+                'headers': auth_header
             }
         # Search for tickers that match the search term
         results = []
@@ -29,11 +33,13 @@ def search_tickers(event, context):
                 })
         return {
             'statusCode': 200,
-            'body': json.dumps(results[:10])  # return top 10 results
+            'body': json.dumps(results[:10]),  # return top 10 results
+            'headers': auth_header
         }
     except Exception as e:
         print("Error in search_tickers:", str(e))
         return {
             'statusCode': 500,
-            'body': json.dumps({'message': str(e)})
+            'body': json.dumps({'message': str(e)}),
+            'headers': auth_header
         }

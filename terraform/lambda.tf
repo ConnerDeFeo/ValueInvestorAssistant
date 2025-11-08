@@ -1,3 +1,17 @@
+# Data for user auth layer
+data "archive_file" "user_auth_layer" {
+  type        = "zip"
+  source_dir  = "${path.module}/../server/layers/user_auth/"
+  output_path = "${path.module}/../server/layers/user_auth/user_auth.zip"
+}
+
+resource "aws_lambda_layer_version" "user_auth" {
+  filename         = data.archive_file.user_auth_layer.output_path
+  layer_name       = "user_auth"
+  compatible_runtimes = ["python3.12"]
+  source_code_hash = data.archive_file.user_auth_layer.output_base64sha256
+}
+
 # IAM role for Lambda
 resource "aws_iam_role" "lambda_role" {
   name = "my-lambda-role"
@@ -76,26 +90,6 @@ resource "aws_lambda_function" "lambdas" {
   source_code_hash = data.archive_file.lambda_archives[each.key].output_base64sha256
   timeout          = 120
   memory_size      = 512
-}
 
-# Give each lambda an endpoint
-resource "aws_lambda_function_url" "lambda_urls" {
-  for_each = aws_lambda_function.lambdas
-
-  function_name = each.value.function_name
-  authorization_type = "NONE"
-
-  cors {
-    allow_origins = ["*"]
-    allow_methods = ["*"]
-    allow_headers = ["*"]
-  }
-}
-
-# Output the Lambda function URLs
-output "lambda_function_urls" {
-  value = {
-    for key, lambda in aws_lambda_function.lambdas :
-    key => aws_lambda_function_url.lambda_urls[key].function_url
-  }
+  layers           = [aws_lambda_layer_version.user_auth.arn]
 }
