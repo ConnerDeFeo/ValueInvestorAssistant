@@ -155,19 +155,6 @@ resource "aws_api_gateway_stage" "api_stage" {
   deployment_id = aws_api_gateway_deployment.api_deployment.id
 }
 
-# Add throttling via method settings instead
-resource "aws_api_gateway_method_settings" "all" {
-  rest_api_id = aws_api_gateway_rest_api.main.id
-  stage_name  = aws_api_gateway_stage.api_stage.stage_name
-  method_path = "*/*"  # Applies to all methods
-
-  settings {
-    throttling_burst_limit = 10
-    throttling_rate_limit  = 5
-    metrics_enabled        = true
-  }
-}
-
 # Specific limits for comparison endpoint
 resource "aws_api_gateway_method_settings" "compare_settings" {
   rest_api_id = aws_api_gateway_rest_api.main.id
@@ -179,4 +166,32 @@ resource "aws_api_gateway_method_settings" "compare_settings" {
     throttling_rate_limit  = 1
     metrics_enabled        = true
   }
+}
+
+# Create an API Key for accessing the API
+resource "aws_api_gateway_api_key" "main" {
+  name = "findiff_api_key"
+  enabled = true
+}
+
+# Create a Usage Plan for the API Key
+resource "aws_api_gateway_usage_plan" "main" {
+  name = "findiff_usage_plan"
+
+  api_stages {
+    api_id = aws_api_gateway_rest_api.main.id
+    stage  = aws_api_gateway_stage.api_stage.stage_name
+  }
+
+  throttle_settings {
+    burst_limit = 10
+    rate_limit  = 5
+  }
+}
+
+# Associate the API Key with the Usage Plan
+resource "aws_api_gateway_usage_plan_key" "main" {
+  key_id        = aws_api_gateway_api_key.main.id
+  key_type      = "API_KEY"
+  usage_plan_id = aws_api_gateway_usage_plan.main.id
 }
