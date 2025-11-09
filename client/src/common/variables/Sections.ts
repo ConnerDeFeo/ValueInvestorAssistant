@@ -1,4 +1,5 @@
-const Sections = {
+export const Sections = {
+    // PART I
     BUSINESS: 'business',
     RISK_FACTORS: 'risk_factors',
     UNRESOLVED_STAFF_COMMENTS: 'unresolved_staff_comments',
@@ -7,6 +8,7 @@ const Sections = {
     LEGAL_PROCEEDINGS: 'legal_proceedings',
     MINE_SAFETY: 'mine_safety',
 
+    // PART II
     MARKET_FOR_REGISTRANTS_COMMON_EQUITY: 'market_for_registrants_common_equity',
     SELECTED_FINANCIAL_DATA: 'selected_financial_data',
     MANAGEMENTS_DISCUSSION_AND_ANALYSIS: 'managements_discussion_and_analysis',
@@ -17,6 +19,7 @@ const Sections = {
     OTHER_INFORMATION: 'other_information',
     DISCLOSURES_REGARDING_FOREIGN_JURISDICTIONS_THAT_PREVENT_INSPECTION: 'disclosures_regarding_foreign_jurisdictions_that_prevent_inspection',
 
+    // PART III
     DIRECTORS_AND_EXECUTIVE_OFFICERS: 'directors_and_executive_officers',
     EXECUTIVE_COMPENSATION: 'executive_compensation',
     SECURITY_OWNERSHIP_OF_CERTAIN_BENEFICIAL_OWNERS_AND_MANAGEMENT: 'security_ownership_of_certain_beneficial_owners_and_management',

@@ -15,6 +15,9 @@ def compare_10k_filings(event, context):
         url1 = body['url1']
         url2 = body['url2']
         sections = body['sections'] # Sections to compare
+
+        if not sections:
+            raise ValueError("Sections parameter is required")
     
         # Create job ID
         job_id = str(uuid.uuid4())

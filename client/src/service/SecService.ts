@@ -3,8 +3,8 @@ import API from "./API";
 const URL = import.meta.env.VITE_FINDIFF_API_URL!;
 
 const secService = {
-    compare10KFilings: async (url1:string, url2:string)=>{
-        return await API.post(`${URL}/compare_10k_filings`, { url1, url2 });
+    compare10KFilings: async (url1:string, url2:string, sections: string[])=>{
+        return await API.post(`${URL}/compare_10k_filings`, { url1, url2, sections });
     },
     searchTickers: async (query: string) => {
         return await API.get(`${URL}/search_tickers?q=${query}`);

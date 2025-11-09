@@ -28,7 +28,7 @@ def extract_cik_from_url(url):
         return match.group(1).lstrip('0')  # remove leading zeros
     return None
 
-def parse_html_to_text(html_content, sections):
+def parse_html_to_text(html_content, requested_sections):
     """
     Extract key sections from a 10-K filing
     """
@@ -85,13 +85,12 @@ def parse_html_to_text(html_content, sections):
             print(f"Section {key} not found in filing.")
             continue
         section_match = section_matches[0] if len(section_matches) == 1 else section_matches[1]  # ignore heading
-        if key in sections:
+        if currentTitle in requested_sections:
             start_pos = currentMatch.end()
             end_pos = section_match.start()
             section_text = full_text[start_pos:end_pos].strip()
             sections[currentTitle] = section_text
 
-        # Add results
         currentMatch = section_match
         currentTitle = key
 
@@ -131,24 +130,23 @@ def compare_texts(oldText, newText):
     return differences
 
 def compare_10k_filings_worker(event, context):
+    # Helper to update job status
+    def update_job_status(result, status):
+        update_item(
+            'comparison_jobs',
+            key={'job_id': job_id},
+            update_expression='SET #status = :status, #result = :result',
+            expression_attribute_names={'#status': 'status', "#result": "result"},
+            expression_attribute_values={
+                ':status': status,
+                ':result': result
+            }
+        )
     try:
         url1 = event['url1']
         url2 = event['url2']
         job_id = event['jobId']
         sections = event['sections']
-
-        # Helper to update job status
-        def update_job_status(result, status):
-            update_item(
-                'comparison_jobs',
-                key={'job_id': job_id},
-                update_expression='SET #status = :status, #result = :result',
-                expression_attribute_names={'#status': 'status', "#result": "result"},
-                expression_attribute_values={
-                    ':status': status,
-                    ':result': result
-                }
-            )
 
         # 1. Fetch both 10-Ks
         old = fetch_10k_from_sec(url1.replace('/ix?doc=', ''))
@@ -166,6 +164,21 @@ def compare_10k_filings_worker(event, context):
         new_text = parse_html_to_text(new, set(sections))
         # 3. Diff them
         differences = compare_texts(old_text, new_text)
+        # Make sure token limit is not exceeded
+        tokens = 0
+        for change in differences.values():
+            for add in change['added']:
+                tokens += len(add.split()) / 4  # rough estimate
+            for rem in change['removed']:
+                tokens += len(rem.split()) / 4  # rough estimate
+            for unch in change['unchanged']:
+                tokens += len(unch.split()) / 4  # rough estimate
+        print(f"Estimated tokens for Bedrock call: {tokens}")
+
+        if tokens > 100000:
+            update_job_status("The differences between the selected sections exceed the token limit for analysis. Please choose fewer sections.", "FAILED")
+            return
+        
         try:
             bedrock = boto3.client('bedrock-runtime', region_name='us-east-1')
             response = bedrock.converse(
@@ -203,3 +216,4 @@ def compare_10k_filings_worker(event, context):
             update_job_status(f"Error calling Bedrock: {str(e)}", "FAILED")
     except Exception as e:
         print(f"Error fetching filings: {str(e)}")
+        update_job_status(f"Internal Server Error: {str(e)}", "FAILED")

@@ -6,6 +6,7 @@ import secService from "./service/SecService";
 import MarkDownDisplay from "./common/component/display/MarkdownDisplay";
 import FinDiffButton from "./common/component/FinDiffButton";
 import Spinner from "./common/component/display/Spinner";
+import { Sections } from "./common/variables/Sections";
 
 function App() {
   const [analysis, setAnalysis] = useState<string>('');
@@ -15,6 +16,15 @@ function App() {
   const [selectedOlderFilingDate, setSelectedOlderFilingDate] = useState<string>('');
   const [selectedNewerFilingDate, setSelectedNewerFilingDate] = useState<string>('');
   const [awaitingAnalysis, setAwaitingAnalysis] = useState<boolean>(false);
+  const [selectedSections, setSelectedSections] = useState<string[]>([]);
+
+  const handleCheckboxChange = (section: string) => {
+    if (selectedSections.includes(section)) {
+      setSelectedSections(selectedSections.filter(s => s !== section));
+    } else {
+      setSelectedSections([...selectedSections, section]);
+    }
+  };
 
   const handleSubmit = async () => {
     if(!selectedOlderFilingDate || !selectedNewerFilingDate) return;
@@ -24,7 +34,7 @@ function App() {
     const stock2 = available10KFilings.find(filing=>filing.filingDate === selectedNewerFilingDate);
     const url1 = `https://www.sec.gov/Archives/edgar/data/${selectedStock?.cik_str}/${stock1?.accessionNumber.replace(/-/g, '')}/${stock1?.primaryDocument}`;
     const url2 = `https://www.sec.gov/Archives/edgar/data/${selectedStock?.cik_str}/${stock2?.accessionNumber.replace(/-/g, '')}/${stock2?.primaryDocument}`;
-    const resp = await secService.compare10KFilings(url1, url2);
+    const resp = await secService.compare10KFilings(url1, url2, selectedSections);
 
     if(resp.ok){
       const jobId = await resp.json();
@@ -149,6 +159,18 @@ function App() {
                   </select>
                 </div>
               </div>
+            </div>
+            <div className="">
+              {Sections && Object.values(Sections).map((section) => (
+                <div key={section} className="flex items-center mt-4">
+                  <input
+                    type="checkbox"
+                    checked={selectedSections.includes(section)}
+                    onChange={() => handleCheckboxChange(section)}
+                  />
+                  <label className="ml-2">{section.replace(/_/g, ' ')}</label>
+                </div>
+              ))}
             </div>
           </div>
         )}
