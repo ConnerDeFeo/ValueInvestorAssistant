@@ -28,7 +28,7 @@ def extract_cik_from_url(url):
         return match.group(1).lstrip('0')  # remove leading zeros
     return None
 
-def parse_html_to_text(html_content):
+def parse_html_to_text(html_content, sections):
     """
     Extract key sections from a 10-K filing
     """
@@ -85,14 +85,16 @@ def parse_html_to_text(html_content):
             print(f"Section {key} not found in filing.")
             continue
         section_match = section_matches[0] if len(section_matches) == 1 else section_matches[1]  # ignore heading
-        start_pos = currentMatch.end()
-        end_pos = section_match.start()
-        section_text = full_text[start_pos:end_pos].strip()
+        if key in sections:
+            start_pos = currentMatch.end()
+            end_pos = section_match.start()
+            section_text = full_text[start_pos:end_pos].strip()
+            sections[currentTitle] = section_text
 
         # Add results
-        sections[currentTitle] = section_text
         currentMatch = section_match
         currentTitle = key
+
     if not sections:
         raise ValueError("Could not find any sections in the filing.")
     return sections
@@ -105,8 +107,8 @@ def compare_texts(oldText, newText):
         # Split into lines for comparison
         lines1 = oldText[key].splitlines(keepends=True)
         lines2 = newText[key].splitlines(keepends=True)
-        lines1 = [line for line in lines1 if len(line)>10]  # remove empty lines
-        lines2 = [line for line in lines2 if len(line)>10]  # remove empty lines
+        lines1 = [line for line in lines1 if len(line)>20]  # remove empty lines
+        lines2 = [line for line in lines2 if len(line)>20]  # remove empty lines
         # Create a diff
         differ = difflib.Differ()
         diff = list(differ.compare(lines1, lines2))
@@ -133,6 +135,7 @@ def compare_10k_filings_worker(event, context):
         url1 = event['url1']
         url2 = event['url2']
         job_id = event['jobId']
+        sections = event['sections']
 
         # Helper to update job status
         def update_job_status(result, status):
@@ -159,8 +162,8 @@ def compare_10k_filings_worker(event, context):
         if old_cik != new_cik:
             update_job_status("The two filings belong to different companies (CIKs do not match).", "FAILED")
             return
-        old_text = parse_html_to_text(old)
-        new_text = parse_html_to_text(new)
+        old_text = parse_html_to_text(old, set(sections))
+        new_text = parse_html_to_text(new, set(sections))
         # 3. Diff them
         differences = compare_texts(old_text, new_text)
         try:
@@ -172,7 +175,7 @@ def compare_10k_filings_worker(event, context):
                         "role": "user", 
                         "content": [{"text": 
                             f"""
-                                You are a value investor analyzing 10-K changes.
+                                You are a value investor analyzing 10-K changes for certain sections.
 
                                 RULES:
                                 - Separate insights by section, with a heading for each section

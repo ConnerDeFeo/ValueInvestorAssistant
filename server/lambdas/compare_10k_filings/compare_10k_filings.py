@@ -14,6 +14,7 @@ def compare_10k_filings(event, context):
     try:
         url1 = body['url1']
         url2 = body['url2']
+        sections = body['sections'] # Sections to compare
     
         # Create job ID
         job_id = str(uuid.uuid4())
@@ -31,7 +32,8 @@ def compare_10k_filings(event, context):
             Payload=json.dumps({
                 'jobId': job_id,
                 'url1': url1,
-                'url2': url2
+                'url2': url2,
+                'sections': sections
             })
         )
         
