@@ -160,17 +160,55 @@ function App() {
                 </div>
               </div>
             </div>
-            <div className="">
-              {Sections && Object.values(Sections).map((section) => (
-                <div key={section} className="flex items-center mt-4">
-                  <input
-                    type="checkbox"
-                    checked={selectedSections.includes(section)}
-                    onChange={() => handleCheckboxChange(section)}
-                  />
-                  <label className="ml-2">{section.replace(/_/g, ' ')}</label>
+
+            {/* Sections Selection */}
+            <div className="border-t border-gray-200 pt-6 mt-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold findiff-secondary-blue">Select Sections to Analyze</h3>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setSelectedSections(Object.values(Sections))}
+                    className="cursor-pointer text-sm px-3 py-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-all"
+                  >
+                    Select All
+                  </button>
+                  <button
+                    onClick={() => setSelectedSections([])}
+                    className="cursor-pointer text-sm px-3 py-1 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-all"
+                  >
+                    Clear All
+                  </button>
                 </div>
-              ))}
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {Sections && Object.values(Sections).map((section) => (
+                  <label
+                    key={section}
+                    className={`flex items-center p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                      selectedSections.includes(section)
+                        ? 'border-blue-600 bg-blue-50 shadow-sm'
+                        : 'border-gray-200 hover:border-blue-300 hover:bg-gray-50'
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedSections.includes(section)}
+                      onChange={() => handleCheckboxChange(section)}
+                      className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                    />
+                    <span className={`ml-3 text-sm font-medium ${
+                      selectedSections.includes(section) ? 'text-blue-800' : 'text-gray-700'
+                    }`}>
+                      {section.replace(/_/g, ' ')}
+                    </span>
+                  </label>
+                ))}
+              </div>
+              {selectedSections.length > 0 && (
+                <p className="mt-3 text-sm text-gray-600">
+                  <span className="font-semibold text-blue-800">{selectedSections.length}</span> section{selectedSections.length !== 1 ? 's' : ''} selected
+                </p>
+              )}
             </div>
           </div>
         )}
