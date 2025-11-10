@@ -11,7 +11,7 @@ const MarkDownDisplay: React.FC<{ markdown: string }> = ({ markdown }) => {
                     h3: ({node, ...props}) =><h3 className="text-lg findiff-secondary-blue font-bold my-3" {...props}></h3>,
                     p: ({node, ...props}) =><p className="my-2 leading-7 text-gray-800" {...props}></p>,
                     li: ({node, ...props}) =><li className="list-disc list-inside my-1" {...props}></li>,
-                    strong: ({node, ...props}) =><strong className="findiff-secondary-blue" {...props}></strong>,
+                    strong: ({node, ...props}) =><strong {...props}></strong>,
                 }}
             >
             {markdown}

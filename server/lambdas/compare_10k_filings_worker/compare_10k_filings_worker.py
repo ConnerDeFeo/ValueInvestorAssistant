@@ -78,6 +78,7 @@ def parse_html_to_text(html_content, requested_sections):
     currentMatch = prev[0] if len(prev) == 1 else prev[1] # ignore heading
     currentTitle = "business"
     sections = {}
+    tokens = 0
     for key, pattern in section_patterns.items():
         section_matches = list(re.finditer(pattern, full_text, re.IGNORECASE))
         # Older fililngs do not have certain sections
@@ -90,48 +91,16 @@ def parse_html_to_text(html_content, requested_sections):
             end_pos = section_match.start()
             section_text = full_text[start_pos:end_pos].strip()
             sections[currentTitle] = section_text
+            tokens += len(section_text) / 4  # rough estimate
 
         currentMatch = section_match
         currentTitle = key
 
     if not sections:
         raise ValueError("Could not find any sections in the filing.")
-    return sections
+    return sections, tokens
 
-def compare_texts(oldText, newText):
-    differences = {}
-    tokens = 0
-    for key in oldText.keys():
-        if key not in newText:
-            continue
-        # Split into lines for comparison
-        lines1 = oldText[key].splitlines(keepends=True)
-        lines2 = newText[key].splitlines(keepends=True)
-        lines1 = [line for line in lines1 if len(line)>20]  # remove empty lines
-        lines2 = [line for line in lines2 if len(line)>20]  # remove empty lines
-        # Create a diff
-        differ = difflib.Differ()
-        diff = list(differ.compare(lines1, lines2))
-        
-        # Parse the diff output
-        changes = {
-            "removed": [], # removed from old filing
-            "added": [], # added in new filing
-            "unchanged": []
-        }
-        for line in diff:
-            if line.startswith('+ '):
-                changes["added"].append(line[2:])
-            elif line.startswith('- '):
-                changes["removed"].append(line[2:])
-            elif line.startswith('  '):
-                changes["unchanged"].append(line[2:])
-            tokens += len(line.split()) / 4  # rough estimate
-        differences[key] = changes
-
-    return {"differences":differences, "tokens": tokens}
-
-MAX_CONTEXT = 128000
+MAX_TOKENS = 100000
 OUTPUT_TOKENS = 4000
 def compare_10k_filings_worker(event, context):
     # Helper to update job status
@@ -164,16 +133,13 @@ def compare_10k_filings_worker(event, context):
         if old_cik != new_cik:
             update_job_status("The two filings belong to different companies (CIKs do not match).", "FAILED")
             return
-        old_text = parse_html_to_text(old, set(sections))
-        new_text = parse_html_to_text(new, set(sections))
-        # 3. Diff them
-        comparison = compare_texts(old_text, new_text)
-        differences = comparison['differences']
-        tokens = comparison['tokens']
+        old_text, old_tokens = parse_html_to_text(old, set(sections))
+        new_text, new_tokens = parse_html_to_text(new, set(sections))
+        tokens = old_tokens + new_tokens
         print(f"Estimated tokens for Bedrock call: {tokens}")
 
-        if tokens > (MAX_CONTEXT*0.75):  # leave some buffer
-            update_job_status("The differences between the selected sections exceed the token limit for analysis. Please choose fewer sections.", "FAILED")
+        if tokens > MAX_TOKENS:  # leave some buffer
+            update_job_status(f"The differences between the selected sections exceed the token limit for analysis (MAX:{MAX_TOKENS}, ACTUAL:{tokens}). Please choose fewer sections.", "FAILED")
             return
         
         try:
@@ -186,14 +152,20 @@ def compare_10k_filings_worker(event, context):
                         "content": [{"text": 
                             f"""
                                 You are a value investor analyzing 10-K changes for certain sections.
+                                Your goal is to return a marked-down formatted summary of key insights from the changes between the two filings.
 
                                 RULES:
                                 - Separate insights by section, with a heading for each section
                                 - If a section has no significant changes, state "No significant changes"
                                 - Skip administrative updates (dates, formatting, minor legal updates)
-                                - Format: "• [change summary]" with no analysis. Just the facts.
-                                - Keep points as concise as possible.
-                                {differences}
+                                - Give bullet points for each insight
+
+                                You are given the differences between two 10-K filings for the same company:
+                                Old Filing Section:
+                                {old_text}
+                                New Filing Section:
+                                {new_text}
+
                             """
                         }]
                     },
