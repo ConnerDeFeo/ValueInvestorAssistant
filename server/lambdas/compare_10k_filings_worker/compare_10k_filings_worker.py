@@ -100,6 +100,7 @@ def parse_html_to_text(html_content, requested_sections):
 
 def compare_texts(oldText, newText):
     differences = {}
+    tokens = 0
     for key in oldText.keys():
         if key not in newText:
             continue
@@ -125,10 +126,13 @@ def compare_texts(oldText, newText):
                 changes["removed"].append(line[2:])
             elif line.startswith('  '):
                 changes["unchanged"].append(line[2:])
+            tokens += len(line.split()) / 4  # rough estimate
         differences[key] = changes
 
-    return differences
+    return {"differences":differences, "tokens": tokens}
 
+MAX_CONTEXT = 128000
+OUTPUT_TOKENS = 4000
 def compare_10k_filings_worker(event, context):
     # Helper to update job status
     def update_job_status(result, status):
@@ -163,19 +167,12 @@ def compare_10k_filings_worker(event, context):
         old_text = parse_html_to_text(old, set(sections))
         new_text = parse_html_to_text(new, set(sections))
         # 3. Diff them
-        differences = compare_texts(old_text, new_text)
-        # Make sure token limit is not exceeded
-        tokens = 0
-        for change in differences.values():
-            for add in change['added']:
-                tokens += len(add.split()) / 4  # rough estimate
-            for rem in change['removed']:
-                tokens += len(rem.split()) / 4  # rough estimate
-            for unch in change['unchanged']:
-                tokens += len(unch.split()) / 4  # rough estimate
+        comparison = compare_texts(old_text, new_text)
+        differences = comparison['differences']
+        tokens = comparison['tokens']
         print(f"Estimated tokens for Bedrock call: {tokens}")
 
-        if tokens > 100000:
+        if tokens > (MAX_CONTEXT*0.75):  # leave some buffer
             update_job_status("The differences between the selected sections exceed the token limit for analysis. Please choose fewer sections.", "FAILED")
             return
         
@@ -193,15 +190,15 @@ def compare_10k_filings_worker(event, context):
                                 RULES:
                                 - Separate insights by section, with a heading for each section
                                 - If a section has no significant changes, state "No significant changes"
-                                - Each point: max 12 words
                                 - Skip administrative updates (dates, formatting, minor legal updates)
                                 - Format: "• [change summary]" with no analysis. Just the facts.
+                                - Keep points as concise as possible.
                                 {differences}
                             """
                         }]
                     },
                 ],
-                inferenceConfig={"maxTokens": 4000, "temperature": 0}
+                inferenceConfig={"maxTokens": OUTPUT_TOKENS, "temperature": 0}
             )
             content = response["output"]["message"]["content"]
             print("response", response['usage'])
@@ -213,7 +210,7 @@ def compare_10k_filings_worker(event, context):
             update_job_status(raw_text, "COMPLETED")
         except Exception as e:
             print(f"Error calling Bedrock: {str(e)}")
-            update_job_status(f"Error calling Bedrock: {str(e)}", "FAILED")
+            update_job_status(f"Too many changes were detected for analysis. Please narrow your selection.", "FAILED")
     except Exception as e:
         print(f"Error fetching filings: {str(e)}")
         update_job_status(f"Internal Server Error: {str(e)}", "FAILED")
