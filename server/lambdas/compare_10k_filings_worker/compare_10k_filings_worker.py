@@ -54,23 +54,24 @@ def parse_html_to_text(html_content, requested_sections):
         "market_for_registrants_common_equity": r"Part\s+(2|II)\s+Item\s+5\s*[\.:-]\s*Market\s+for\s+Registrant.s\s+Common\s+Equity",
         "selected_financial_data": r"Item\s+6\s*[\.:-]\s*Selected Financial Data",
         "managements_discussion_and_analysis": r"Item\s+7\s*[\.:-]\s*Management.s Discussion and Analysis of Financial Condition and Results of Operations",
-        "quantitative_and_qualitative_disclosures": r"Item\s+7A\s*[\.:-]\s*Quantitative and Qualitative Disclosures about Market Risk",
+
+        "quantitative_and_qualitative_disclosures": r"Item\s+7A\s*[\.:-]\s*Quantitative",
+
         "financial_statements_and_supplementary_data": r"Item\s+8\s*[\.:-]\s*Financial Statements and Supplementary Data",
         "changes_in_and_disagreements_with_accountants": r"Item\s+9\s*[\.:-]\s*Changes in and Disagreements with Accountants on Accounting and Financial Disclosure",
         "controls_and_procedures": r"Item\s+9A\s*[\.:-]\s*Controls and Procedures",
         "other_information": r"Item\s+9B\s*[\.:-]\s*Other Information",
-        
         "disclosures_regarding_foreign_jurisdictions_that_prevent_inspection": r"Item\s+9C\s*[\.:-]\s*Disclosure\sRegarding\sForeign\sJurisdictions\sThat\sPrevent\sInspections",
 
         # Part III
-        "directors_and_executive_officers": r"Part\s+(3|III)\s+Item\s+10\s*[\.:-]\s*Directors, Executive Officers and Corporate Governance",
+        "directors_and_executive_officers": r"Part\s+(3|III)\s+Item\s+10\s*[\.:-]\s*Directors, Executive Officers,* and Corporate Governance",
         "executive_compensation": r"Item\s+11\s*[\.:-]\s*Executive Compensation",
         "security_ownership_of_certain_beneficial_owners_and_management": r"Item\s+12\s*[\.:-]\s*Security Ownership of Certain Beneficial Owners and Management",
         "certain_relationships_and_related_transactions": r"Item\s+13\s*[\.:-]\s*Certain Relationships and Related Transactions",
         "principal_accountant_fees_and_services": r"Item\s+14\s*[\.:-]\s*Principal Accountant Fees and Services",
 
         # Part IV
-        "exhibits_and_financial_statement_schedules": r"Part\s+(4|IV)\s+Item\s+15\s*[\.:-]\s*Exhibits and Financial Statement Schedules",
+        "exhibits_and_financial_statement_schedules": r"Part\s+(4|IV)\s+Item\s+15\s*[\.:-]\s*Exhibits(,*| and) Financial Statement Schedules",
     }
     prev  = list(re.finditer(r"(Item)\s+1\s*[\.:-]\s*(Business)", full_text, re.IGNORECASE))
     if not prev:
@@ -85,23 +86,24 @@ def parse_html_to_text(html_content, requested_sections):
         if not section_matches:
             print(f"Section {key} not found in filing.")
             continue
-        section_match = section_matches[0] if len(section_matches) == 1 else section_matches[1]  # ignore heading
-        if currentTitle in requested_sections:
+        section_match = section_matches[0] if len(section_matches) == 1 else section_matches[-1]  # ignore all but last finding
+        if currentTitle in requested_sections: 
             start_pos = currentMatch.end()
             end_pos = section_match.start()
+            if start_pos >= end_pos:
+                continue # skip invalid sections
             section_text = full_text[start_pos:end_pos].strip()
             sections[currentTitle] = section_text
             tokens += len(section_text) / 4  # rough estimate
 
-        currentMatch = section_match
-        currentTitle = key
+        currentTitle, currentMatch = key, section_match
 
     if not sections:
         raise ValueError("Could not find any sections in the filing.")
     return sections, tokens
 
 MAX_TOKENS = 100000
-OUTPUT_TOKENS = 4000
+OUTPUT_TOKENS = 8000
 def compare_10k_filings_worker(event, context):
     # Helper to update job status
     def update_job_status(result, status):
@@ -135,6 +137,8 @@ def compare_10k_filings_worker(event, context):
             return
         old_text, old_tokens = parse_html_to_text(old, set(sections))
         new_text, new_tokens = parse_html_to_text(new, set(sections))
+        if "managements_discussion_and_analysis" in sections:
+            print("MD&A Section Lengths:", len(old_text.get("managements_discussion_and_analysis", "")), len(new_text.get("managements_discussion_and_analysis", "")))
         tokens = old_tokens + new_tokens
         print(f"Estimated tokens for Bedrock call: {tokens}")
 
@@ -155,17 +159,17 @@ def compare_10k_filings_worker(event, context):
                                 Your goal is to return a marked-down formatted summary of key insights from the changes between the two filings.
 
                                 RULES:
-                                - Separate insights by section, with a heading for each section
+                                - Separate insights by section, with a heading (h2) for each section
                                 - If a section has no significant changes, state "No significant changes"
                                 - Skip administrative updates (dates, formatting, minor legal updates)
                                 - Give bullet points for each insight
+                                - Keep bullet points as concise as possible.
 
-                                You are given the differences between two 10-K filings for the same company:
-                                Old Filing Section:
+                                Old Filing Section: 
                                 {old_text}
+
                                 New Filing Section:
                                 {new_text}
-
                             """
                         }]
                     },
