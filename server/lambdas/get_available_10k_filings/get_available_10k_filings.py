@@ -25,7 +25,7 @@ def get_available_10k_filings(event, context):
                 filing_info = {
                     'accessionNumber': filings['accessionNumber'][i],
                     'filingDate': filings['filingDate'][i],
-                    "primaryDocument": filings['primaryDocument'][i],
+                    'primaryDocument': filings['primaryDocument'][i],
                 }
                 ten_k_filings.append(filing_info)
         return {

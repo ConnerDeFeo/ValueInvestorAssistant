@@ -24,9 +24,7 @@ function App() {
 
     const stock1 = available10KFilings.find(filing=>filing.filingDate === selectedOlderFilingDate);
     const stock2 = available10KFilings.find(filing=>filing.filingDate === selectedNewerFilingDate);
-    const url1 = `https://www.sec.gov/Archives/edgar/data/${selectedStock?.cik_str}/${stock1?.accessionNumber.replace(/-/g, '')}/${stock1?.primaryDocument}`;
-    const url2 = `https://www.sec.gov/Archives/edgar/data/${selectedStock?.cik_str}/${stock2?.accessionNumber.replace(/-/g, '')}/${stock2?.primaryDocument}`;
-    const resp = await secService.compare10KFilings(url1, url2, selectedSections);
+    const resp = await secService.compare10KFilings(stock1!, stock2!, selectedSections);
 
     if(resp.ok){
       const jobId = await resp.json();

@@ -157,20 +157,20 @@ def compare_10k_filings_worker(event, context):
             }
         )
     try:
-        url1 = event['url1']
-        url2 = event['url2']
+        stock1 = event['stock1']
+        stock2 = event['stock2']
         job_id = event['jobId']
         sections = event['sections']
 
         # 1. Fetch both 10-Ks
-        old = fetch_10k_from_sec(url1.replace('/ix?doc=', ''))
-        new = fetch_10k_from_sec(url2.replace('/ix?doc=', ''))
+        old = fetch_10k_from_sec(stock1['accessionNumber'].replace('/ix?doc=', ''))
+        new = fetch_10k_from_sec(stock2['accessionNumber'].replace('/ix?doc=', ''))
         if not old or not new:
             # Update status
             update_job_status("Failed to fetch one or both filings.", "FAILED")
             return
-        old_cik = extract_cik_from_url(url1)
-        new_cik = extract_cik_from_url(url2)
+        old_cik = extract_cik_from_url(f"https://www.sec.gov/Archives/edgar/data/{stock1['cik_str']}/{stock1['accessionNumber'].replace('-','')}/{stock1['primaryDocument']}")
+        new_cik = extract_cik_from_url(f"https://www.sec.gov/Archives/edgar/data/{stock2['cik_str']}/{stock2['accessionNumber'].replace('-','')}/{stock2['primaryDocument']}")
         if old_cik != new_cik:
             update_job_status("The two filings belong to different companies (CIKs do not match).", "FAILED")
             return
