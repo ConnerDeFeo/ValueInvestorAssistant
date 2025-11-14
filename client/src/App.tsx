@@ -87,145 +87,135 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen findiff-bg-white">
-      <div className="max-w-5xl mx-auto p-6 pt-12">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-5xl font-bold mb-3 bg-gradient-to-r findiff-primary-blue bg-clip-text text-transparent">
-            FinDiff
-          </h1>
-          <p className="text-lg text-gray-600">SEC Filing Comparison & Analysis</p>
-        </div>
+    <div className="min-h-screen findiff-bg-white flex">
+      {/* Left Sidebar */}
+      <div className="w-96 bg-white border-r border-gray-200 shadow-lg overflow-y-auto">
+        <div className="p-6">
+          {/* Header */}
+          <div className="mb-8">
+            <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r findiff-primary-blue bg-clip-text text-transparent">
+              FinDiff
+            </h1>
+            <p className="text-sm text-gray-600">SEC Filing Comparison</p>
+          </div>
 
-        {/* Search Section */}
-        <div className="bg-white rounded-xl shadow-lg p-6 mb-6 border-t-4 findiff-border-primary-blue">
-          <SearchStock onSelect={onStockSelect}/>
-        </div>
+          {/* Search Section */}
+          <div className="mb-6">
+            <SearchStock onSelect={onStockSelect}/>
+          </div>
 
-        {/* Selected Stock Card */}
-        {selectedStock && (
-          <div className="bg-white rounded-xl shadow-lg p-8 mb-6 border-t-4 findiff-border-primary-blue">
-            <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-6">
-              <div>
-                <h2 className="font-bold text-3xl mb-3 findiff-secondary-blue">{selectedStock.title}</h2>
-                <div className="space-y-1">
-                  <p className="text-gray-700">
+          {/* Selected Stock Card */}
+          {selectedStock && (
+            <div className="space-y-6">
+              {/* Stock Overview */}
+              <div className="pb-6 border-b border-gray-200">
+                <h2 className="font-bold text-xl mb-3 findiff-secondary-blue">{selectedStock.title}</h2>
+                <div className="space-y-2">
+                  <p className="text-sm text-gray-700">
                     <span className="font-semibold findiff-primary-blue">Ticker:</span> 
-                    <span className="ml-2 px-3 py-1 bg-blue-100 findiff-primary-blue rounded-md font-mono">{selectedStock.ticker}</span>
+                    <span className="ml-2 px-2 py-1 bg-blue-100 findiff-primary-blue rounded text-xs font-mono">{selectedStock.ticker}</span>
                   </p>
-                  <p className="text-gray-700">
+                  <p className="text-sm text-gray-700">
                     <span className="font-semibold findiff-primary-blue">CIK:</span> 
-                    <span className="ml-2 font-mono text-gray-600">{selectedStock.cik_str}</span>
+                    <span className="ml-2 font-mono text-xs text-gray-600">{selectedStock.cik_str}</span>
                   </p>
                 </div>
               </div>
-              <FinDiffButton onClick={handleSubmit} disabled={!selectedOlderFilingDate || !selectedNewerFilingDate || awaitingAnalysis}>
-                Compare Filings
-              </FinDiffButton>
-            </div>
 
-            {/* Filing Selection */}
-            <div className="border-t border-gray-200 pt-6">
-              <h3 className="text-lg font-semibold findiff-secondary-blue mb-4 text-center">Select Two 10-K Filings to Compare</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Older Filing</label>
-                  <select 
-                    className="w-full border-2 border-gray-300 rounded-lg p-3 cursor-pointer hover:border-blue-500 focus:border-blue-800 focus:ring-2 focus:ring-blue-200 transition-all" 
-                    value={selectedOlderFilingDate} 
-                    onChange={e => setSelectedOlderFilingDate(e.target.value)}
-                  >
-                    <option value="" className="cursor-pointer">Select a filing</option>
-                    {available10KFilings.map(filing=> (!selectedNewerFilingDate || filing.filingDate < selectedNewerFilingDate) && (
-                      <option key={filing.accessionNumber} value={filing.filingDate} className="cursor-pointer">
-                        {filing.filingDate.split('-')[0]}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Newer Filing</label>
-                  <select 
-                    className="w-full border-2 border-gray-300 rounded-lg p-3 cursor-pointer hover:border-blue-500 focus:border-blue-800 focus:ring-2 focus:ring-blue-200 transition-all" 
-                    value={selectedNewerFilingDate} 
-                    onChange={e=>setSelectedNewerFilingDate(e.target.value)}
-                  >
-                    <option value="">Select a filing</option>
-                    {available10KFilings.map(filing=>(!selectedOlderFilingDate || filing.filingDate > selectedOlderFilingDate) && (
-                      <option key={filing.accessionNumber} value={filing.filingDate}>
-                        {filing.filingDate.split('-')[0]}
-                      </option>
-                    ))}
-                  </select>
+              {/* Filing Selection */}
+              <div className="pb-6 border-b border-gray-200">
+                <h3 className="text-sm font-semibold findiff-secondary-blue mb-4">Select Filings to Compare</h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-2">Older Filing</label>
+                    <select 
+                      className="w-full border-2 border-gray-300 rounded-lg p-2 text-sm cursor-pointer hover:border-blue-500 focus:border-blue-800 focus:ring-2 focus:ring-blue-200 transition-all" 
+                      value={selectedOlderFilingDate} 
+                      onChange={e => setSelectedOlderFilingDate(e.target.value)}
+                    >
+                      <option value="" className="cursor-pointer">Select a filing</option>
+                      {available10KFilings.map(filing=> (!selectedNewerFilingDate || filing.filingDate < selectedNewerFilingDate) && (
+                        <option key={filing.accessionNumber} value={filing.filingDate} className="cursor-pointer">
+                          {filing.filingDate.split('-')[0]}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-2">Newer Filing</label>
+                    <select 
+                      className="w-full border-2 border-gray-300 rounded-lg p-2 text-sm cursor-pointer hover:border-blue-500 focus:border-blue-800 focus:ring-2 focus:ring-blue-200 transition-all" 
+                      value={selectedNewerFilingDate} 
+                      onChange={e=>setSelectedNewerFilingDate(e.target.value)}
+                    >
+                      <option value="">Select a filing</option>
+                      {available10KFilings.map(filing=>(!selectedOlderFilingDate || filing.filingDate > selectedOlderFilingDate) && (
+                        <option key={filing.accessionNumber} value={filing.filingDate}>
+                          {filing.filingDate.split('-')[0]}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Sections Selection */}
-            <div className="border-t border-gray-200 pt-6 mt-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold findiff-secondary-blue">Select Sections to Analyze</h3>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setSelectedSections(Object.values(Sections))}
-                    className="cursor-pointer text-sm px-3 py-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-all"
-                  >
-                    Select All
-                  </button>
-                  <button
-                    onClick={() => setSelectedSections([])}
-                    className="cursor-pointer text-sm px-3 py-1 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-all"
-                  >
-                    Clear All
-                  </button>
-                </div>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {Sections && Object.values(Sections).map((section) => (
-                  <label
-                    key={section}
-                    className={`flex items-center p-3 rounded-lg border-2 cursor-pointer transition-all ${
-                      selectedSections.includes(section)
-                        ? 'border-blue-600 bg-blue-50 shadow-sm'
-                        : 'border-gray-200 hover:border-blue-300 hover:bg-gray-50'
-                    }`}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={selectedSections.includes(section)}
-                      onChange={() => handleCheckboxChange(section)}
-                      className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500 cursor-pointer"
-                    />
-                    <span className={`ml-3 text-sm font-medium ${
-                      selectedSections.includes(section) ? 'text-blue-800' : 'text-gray-700'
-                    }`}>
+              {/* Sections Selection */}
+              <div className="pb-6">
+                <label className="block text-xs font-medium text-gray-700 mb-2">Section to Analyze</label>
+                <select 
+                  className="w-full border-2 border-gray-300 rounded-lg p-2 text-sm cursor-pointer hover:border-blue-500 focus:border-blue-800 focus:ring-2 focus:ring-blue-200 transition-all" 
+                  value={selectedSections[0] || ''} 
+                  onChange={e => setSelectedSections(e.target.value ? [e.target.value] : [])}
+                >
+                  <option value="">Select a section</option>
+                  {Sections && Object.values(Sections).map((section) => (
+                    <option key={section} value={section}>
                       {section.replace(/_/g, ' ')}
-                    </span>
-                  </label>
-                ))}
+                    </option>
+                  ))}
+                </select>
               </div>
-              {selectedSections.length > 0 && (
-                <p className="mt-3 text-sm text-gray-600">
-                  <span className="font-semibold text-blue-800">{selectedSections.length}</span> section{selectedSections.length !== 1 ? 's' : ''} selected
-                </p>
-              )}
-            </div>
-          </div>
-        )}
 
-        {/* Analysis Results */}
-        {(analysis || awaitingAnalysis) && (
-          <div className="bg-white rounded-xl shadow-lg p-8 border-t-4 findiff-border-primary-blue">
-            { awaitingAnalysis ? 
-            <div className="flex justify-center items-center">
-              <Spinner />
-              This may take a few moments.
+              {/* Compare Button */}
+              <div>
+                <FinDiffButton 
+                  onClick={handleSubmit} 
+                  disabled={!selectedOlderFilingDate || !selectedNewerFilingDate || awaitingAnalysis}
+                >
+                  Compare Filings
+                </FinDiffButton>
+              </div>
             </div>
-              :
-              <MarkDownDisplay markdown={analysis} />
-            }
-          </div>
-        )}
+          )}
+        </div>
+      </div>
+
+      {/* Main Content Area */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="max-w-5xl mx-auto p-8">
+          {(analysis || awaitingAnalysis) && (
+            <div className="bg-white rounded-xl shadow-lg p-8 border-t-4 findiff-border-primary-blue">
+              { awaitingAnalysis ? 
+                <div className="flex flex-col justify-center items-center py-12">
+                  <Spinner />
+                  <p className="mt-4 text-gray-600">This may take a few moments.</p>
+                </div>
+                :
+                <MarkDownDisplay markdown={analysis} />
+              }
+            </div>
+          )}
+          {!analysis && !awaitingAnalysis && (
+            <div className="flex items-center justify-center h-full">
+              <div className="text-center text-gray-400">
+                <svg className="mx-auto h-24 w-24 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <p className="text-lg">Select filings to compare and view analysis here</p>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
