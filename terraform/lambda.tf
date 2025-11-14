@@ -38,6 +38,13 @@ data "archive_file" "dynamo_layer" {
   output_path = "${path.module}/../server/layers/dynamo/dynamodb.zip"
 }
 
+# Data for s3 layer
+data "archive_file" "s3_layer" {
+  type        = "zip"
+  source_dir  = "${path.module}/../server/layers/s3/"
+  output_path = "${path.module}/../server/layers/s3/s3.zip"
+}
+
 resource "aws_lambda_layer_version" "user_auth" {
   filename         = data.archive_file.user_auth_layer.output_path
   layer_name       = "user_auth"
@@ -50,6 +57,13 @@ resource "aws_lambda_layer_version" "dynamo" {
   layer_name       = "dynamo"
   compatible_runtimes = ["python3.12"]
   source_code_hash = data.archive_file.dynamo_layer.output_base64sha256
+}
+
+resource "aws_lambda_layer_version" "s3" {
+  filename         = data.archive_file.s3_layer.output_path
+  layer_name       = "s3"
+  compatible_runtimes = ["python3.12"]
+  source_code_hash = data.archive_file.s3_layer.output_base64sha256
 }
 
 # IAM role for Lambda
@@ -131,6 +145,30 @@ resource "aws_iam_role_policy" "lambda_invoke_worker" {
   })
 }
 
+# Allow lambda to access S3 bucket
+resource "aws_iam_role_policy" "lambda_s3_access" {
+  name = "lambda_s3_access_policy"
+  role = aws_iam_role.lambda_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:PutObject",
+          "s3:GetObject",
+          "s3:ListBucket"
+        ]
+        Resource = [
+          "${aws_s3_bucket.company_filings.arn}",
+          "${aws_s3_bucket.company_filings.arn}/*"
+        ]
+      }
+    ]
+  })
+}
+
 # Archive files using for_each
 data "archive_file" "lambda_archives" {
   for_each = local.lambda_function_locations
@@ -153,5 +191,5 @@ resource "aws_lambda_function" "lambdas" {
   timeout          = 120
   memory_size      = 512
 
-  layers           = [aws_lambda_layer_version.user_auth.arn, aws_lambda_layer_version.dynamo.arn]
+  layers           = [aws_lambda_layer_version.user_auth.arn, aws_lambda_layer_version.dynamo.arn, aws_lambda_layer_version.s3.arn]
 }

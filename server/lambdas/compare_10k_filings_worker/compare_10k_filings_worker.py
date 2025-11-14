@@ -1,10 +1,12 @@
 import httpx
 import re
 from bs4 import BeautifulSoup
-import difflib
 from dynamo import update_item
 import boto3
 
+MAX_TOKENS = 100000
+OUTPUT_TOKENS = 8000
+bedrock = boto3.client('bedrock-runtime', region_name='us-east-1')
 # Fetch 10-K filing from SEC EDGAR
 def fetch_10k_from_sec(url: str):
     headers = {
@@ -102,8 +104,45 @@ def parse_html_to_text(html_content, requested_sections):
         raise ValueError("Could not find any sections in the filing.")
     return sections, tokens
 
-MAX_TOKENS = 100000
-OUTPUT_TOKENS = 8000
+def extract_text_from_bedrock_response(response):
+    content = response["output"]["message"]["content"]
+    print("Usage: ", response.get("usage", {}))
+    raw_text = "### No Text Generated\nNo summary was produced for this comparison:( Please try again."
+    for item in content:
+        if "text" in item:
+            raw_text = item["text"]
+            break
+    return raw_text 
+
+def summarize_sections(text, text_tokens, section):
+    if text_tokens > MAX_TOKENS:
+        midway = len(text) // 2
+        first_half = text[:midway+200]
+        second_half = text[midway-200:]
+        response = f"{summarize_sections(first_half, len(first_half) / 4, section)}\n\n{summarize_sections(second_half, len(second_half) / 4, section)}"
+
+    else:
+        response = bedrock.converse(
+            modelId = "openai.gpt-oss-120b-1:0",
+            messages=[
+                {
+                    "role": "user", 
+                    "content": [{"text": 
+                        f"""
+                            You are a value investor assistant summarizing chunks from a 10-K filing for the {section} section.
+                            Your goal is to return a concise summary of everything in the following portion of the section.
+
+                            Section Text:
+                            {text}
+                        """
+                    }]
+                },
+            ],
+            inferenceConfig={"maxTokens": int(OUTPUT_TOKENS/2), "temperature": 0}
+        )
+        response = extract_text_from_bedrock_response(response)
+    return response
+
 def compare_10k_filings_worker(event, context):
     # Helper to update job status
     def update_job_status(result, status):
@@ -137,17 +176,13 @@ def compare_10k_filings_worker(event, context):
             return
         old_text, old_tokens = parse_html_to_text(old, set(sections))
         new_text, new_tokens = parse_html_to_text(new, set(sections))
-        if "managements_discussion_and_analysis" in sections:
-            print("MD&A Section Lengths:", len(old_text.get("managements_discussion_and_analysis", "")), len(new_text.get("managements_discussion_and_analysis", "")))
         tokens = old_tokens + new_tokens
-        print(f"Estimated tokens for Bedrock call: {tokens}")
 
-        if tokens > MAX_TOKENS:  # leave some buffer
-            update_job_status(f"The differences between the selected sections exceed the token limit for analysis (MAX:{MAX_TOKENS}, ACTUAL:{tokens}). Please choose fewer sections.", "FAILED")
-            return
+        if tokens > MAX_TOKENS:
+            old_text = summarize_sections(old_text, old_tokens, sections[0])
+            new_text = summarize_sections(new_text, new_tokens, sections[0])
         
         try:
-            bedrock = boto3.client('bedrock-runtime', region_name='us-east-1')
             response = bedrock.converse(
                 modelId = "openai.gpt-oss-120b-1:0",
                 messages=[
@@ -176,13 +211,7 @@ def compare_10k_filings_worker(event, context):
                 ],
                 inferenceConfig={"maxTokens": OUTPUT_TOKENS, "temperature": 0}
             )
-            content = response["output"]["message"]["content"]
-            print("response", response['usage'])
-            raw_text = "### No Text Generated\nNo summary was produced for this comparison:( Please try again."
-            for item in content:
-                if "text" in item:
-                    raw_text = item["text"]
-                    break
+            raw_text = extract_text_from_bedrock_response(response)
             update_job_status(raw_text, "COMPLETED")
         except Exception as e:
             print(f"Error calling Bedrock: {str(e)}")

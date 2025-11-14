@@ -14,3 +14,13 @@ resource "aws_dynamodb_table" "comparison_jobs" {
     Environment = "prod"
   }
 }
+
+# Create s3 bucket to store company filings
+resource "aws_s3_bucket" "company_filings" {
+  bucket = "findiff-bucket-prod"
+
+  tags = {
+    Name        = "FinDiff Bucket"
+    Environment = "prod"
+  }
+}

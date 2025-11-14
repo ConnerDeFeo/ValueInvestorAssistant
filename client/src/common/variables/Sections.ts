@@ -26,3 +26,10 @@ export const Sections = {
     CERTAIN_RELATIONSHIPS_AND_RELATED_TRANSACTIONS: 'certain_relationships_and_related_transactions',
     PRINCIPAL_ACCOUNTANT_FEES_AND_SERVICES: 'principal_accountant_fees_and_services'
 }
+
+export const ImportantSections = [
+    Sections.BUSINESS,
+    Sections.RISK_FACTORS,
+    Sections.MANAGEMENTS_DISCUSSION_AND_ANALYSIS,
+    Sections.LEGAL_PROCEEDINGS,
+]

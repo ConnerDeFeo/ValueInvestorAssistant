@@ -2,6 +2,8 @@
 
 cd layers/dynamo/python
 pip install -r requirements.txt -t .
+cd ../../s3/python
+pip install -r requirements.txt -t .
 cd ../../../lambdas/compare_10k_filings
 pip install -r requirements.txt -t .
 cd ../compare_10k_filings_worker
@@ -13,6 +15,8 @@ cd ../../../terraform
 terraform apply --auto-approve
 
 cd ../server/layers/dynamo/python
+rm -rf bin boto3** botocore** dateutil jmespath** python** s3transfer** six** urllib3**
+cd ../../s3/python
 rm -rf bin boto3** botocore** dateutil jmespath** python** s3transfer** six** urllib3**
 cd ../../../lambdas/compare_10k_filings
 rm -rf bin boto3** botocore** dateutil jmespath** python** s3transfer** six** urllib3**
