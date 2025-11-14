@@ -87,9 +87,9 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen findiff-bg-white flex">
+    <div className="h-screen findiff-bg-white flex overflow-hidden">
       {/* Left Sidebar */}
-      <div className="w-96 bg-white border-r border-gray-200 shadow-lg overflow-y-auto">
+      <div className="w-96 bg-white border-r border-gray-200 shadow-lg overflow-y-auto flex-shrink-0">
         <div className="p-6">
           {/* Header */}
           <div className="mb-8">
