@@ -12,8 +12,8 @@ def compare_10k_filings(event, context):
     auth_header = post_auth_header()
 
     try:
-        url1 = body['url1']
-        url2 = body['url2']
+        stock1 = body['stock1']  # Expecting {accessionNumber, filingDate, primaryDocument}
+        stock2 = body['stock2']  # Expecting {accessionNumber, filingDate, primaryDocument}
         sections = body['sections'] # Sections to compare
 
         if not sections:
@@ -34,8 +34,8 @@ def compare_10k_filings(event, context):
             InvocationType='Event',
             Payload=json.dumps({
                 'jobId': job_id,
-                'url1': url1,
-                'url2': url2,
+                'stock1': stock1,
+                'stock2': stock2,
                 'sections': sections
             })
         )
