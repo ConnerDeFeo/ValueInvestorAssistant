@@ -18,14 +18,6 @@ function App() {
   const [awaitingAnalysis, setAwaitingAnalysis] = useState<boolean>(false);
   const [selectedSections, setSelectedSections] = useState<string[]>([]);
 
-  const handleCheckboxChange = (section: string) => {
-    if (selectedSections.includes(section)) {
-      setSelectedSections(selectedSections.filter(s => s !== section));
-    } else {
-      setSelectedSections([...selectedSections, section]);
-    }
-  };
-
   const handleSubmit = async () => {
     if(!selectedOlderFilingDate || !selectedNewerFilingDate) return;
     setAnalysis('');
