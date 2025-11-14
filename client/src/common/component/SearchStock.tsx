@@ -17,6 +17,12 @@ const SearchStock : React.FC<{onSelect: (stock: Stock) => void}> = ({ onSelect }
     // Loading state to indicate ongoing search
     const [loading, setLoading] = useState<boolean>(false);
 
+    //flag for mouse clicking down on some option
+    const [isMouseDown, setIsMouseDown] = useState<boolean>(false);
+
+    // Display search results flag
+    const [displayResults, setDisplayResults] = useState<boolean>(false);
+
     /**
      * Fetches ticker search results from the SEC service
      */
@@ -32,6 +38,12 @@ const SearchStock : React.FC<{onSelect: (stock: Stock) => void}> = ({ onSelect }
 
     // Auto-search debounce effect: triggers search 500ms after user stops typing
     useEffect(() => {
+        if(ticker.length === 0) {
+            setSearchResults([]);
+            setDisplayResults(false);
+            setLoading(false);
+            return;
+        }
         setLoading(true);
         const delayDebounceFn = setTimeout(() => {
             setLoading(true);
@@ -47,7 +59,13 @@ const SearchStock : React.FC<{onSelect: (stock: Stock) => void}> = ({ onSelect }
     const handleStockSelect = (stock: Stock) => {
         onSelect(stock);
         setSearchResults([]);
+        setDisplayResults(false);
         setTicker('');
+    }
+
+    const handleTypeTicker = (value: string) => {
+        setTicker(value);
+        setDisplayResults(true);
     }
 
     return(
@@ -59,11 +77,11 @@ const SearchStock : React.FC<{onSelect: (stock: Stock) => void}> = ({ onSelect }
                 <input
                     type="text"
                     value={ticker}
-                    onChange={(e) => setTicker(e.target.value)}
+                    onChange={(e) => handleTypeTicker(e.target.value)}
                     className="w-full border border-gray-300 rounded-md p-2"
                     placeholder="Enter ticker symbol or name..."
-                    onKeyDown={e=>e.key === "Enter" && handleSearchTicker()}
-                    onBlur={()=>setTimeout(()=>setSearchResults([]), 100)} // Delay to allow click selection
+                    onKeyDown={e=>e.key === "Enter" && handleSearchTicker()} 
+                    onBlur={isMouseDown ? undefined : ()=>setDisplayResults(false)}
                 />
                 {/* Search icon button */}
                 <img 
@@ -75,10 +93,16 @@ const SearchStock : React.FC<{onSelect: (stock: Stock) => void}> = ({ onSelect }
             </div>
             
             {/* Results list - only shown when results exist */}
-            {(searchResults.length > 0 || ticker) && (
+            {displayResults && (
                 <ul className="border border-gray-300 rounded-md p-4 mb-4 max-h-60 overflow-y-auto absolute bg-white w-full z-10">
                     {searchResults.length > 0 ? searchResults.map((result, index) => (
-                        <li key={index} className="mb-2 cursor-pointer hover:bg-gray-100 p-2 rounded" onClick={() => handleStockSelect(result)}>
+                        <li 
+                            key={index} 
+                            className="mb-2 cursor-pointer hover:bg-gray-100 p-2 rounded" 
+                            onClick={() => handleStockSelect(result)} 
+                            onMouseDown={()=>setIsMouseDown(true)}
+                            onMouseUp={()=>setIsMouseDown(false)}
+                        >
                             <strong>{result.ticker}</strong> - {result.title} (CIK: {result.cik_str})
                         </li>
                     )) : (
