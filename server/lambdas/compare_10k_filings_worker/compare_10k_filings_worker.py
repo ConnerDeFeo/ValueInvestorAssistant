@@ -20,15 +20,6 @@ def fetch_10k_from_sec(url: str):
             return response.text
         else:
             return None
-        
-def extract_cik_from_url(url):
-    """
-    Extracts the CIK from the SEC URL.
-    """
-    match = re.search(r'/data/(\d+)/', url)
-    if match:
-        return match.group(1).lstrip('0')  # remove leading zeros
-    return None
 
 def parse_html_to_text(html_content, requested_sections):
     """
@@ -162,16 +153,17 @@ def compare_10k_filings_worker(event, context):
         job_id = event['jobId']
         sections = event['sections']
 
+        url1 = f"https://www.sec.gov/Archives/edgar/data/{stock1['cik']}/{stock1['accessionNumber'].replace('-','')}/{stock1['primaryDocument']}"
+        url2 = f"https://www.sec.gov/Archives/edgar/data/{stock2['cik']}/{stock2['accessionNumber'].replace('-','')}/{stock2['primaryDocument']}"
+
         # 1. Fetch both 10-Ks
-        old = fetch_10k_from_sec(stock1['accessionNumber'].replace('/ix?doc=', ''))
-        new = fetch_10k_from_sec(stock2['accessionNumber'].replace('/ix?doc=', ''))
+        old = fetch_10k_from_sec(url1)
+        new = fetch_10k_from_sec(url2)
         if not old or not new:
             # Update status
             update_job_status("Failed to fetch one or both filings.", "FAILED")
             return
-        old_cik = extract_cik_from_url(f"https://www.sec.gov/Archives/edgar/data/{stock1['cik_str']}/{stock1['accessionNumber'].replace('-','')}/{stock1['primaryDocument']}")
-        new_cik = extract_cik_from_url(f"https://www.sec.gov/Archives/edgar/data/{stock2['cik_str']}/{stock2['accessionNumber'].replace('-','')}/{stock2['primaryDocument']}")
-        if old_cik != new_cik:
+        if stock1['cik'] != stock2['cik']:
             update_job_status("The two filings belong to different companies (CIKs do not match).", "FAILED")
             return
         old_text, old_tokens = parse_html_to_text(old, set(sections))

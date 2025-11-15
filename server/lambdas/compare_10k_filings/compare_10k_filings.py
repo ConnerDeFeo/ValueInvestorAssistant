@@ -12,8 +12,8 @@ def compare_10k_filings(event, context):
     auth_header = post_auth_header()
 
     try:
-        stock1 = body['stock1']  # Expecting {accessionNumber, filingDate, primaryDocument}
-        stock2 = body['stock2']  # Expecting {accessionNumber, filingDate, primaryDocument}
+        stock1 = body['stock1']  # Expecting {accessionNumber, cik, primaryDocument}
+        stock2 = body['stock2']  # Expecting {accessionNumber, cik, primaryDocument}
         sections = body['sections'] # Sections to compare
 
         if not sections:
@@ -46,6 +46,7 @@ def compare_10k_filings(event, context):
             'body': json.dumps(job_id)
         }
     except Exception as e:
+        print(f"Error in compare_10k_filings: {str(e)}")
         return {
             'statusCode': 500,
             'headers': auth_header,

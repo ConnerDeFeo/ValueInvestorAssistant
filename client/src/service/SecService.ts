@@ -3,7 +3,7 @@ import API from "./API";
 const URL = import.meta.env.VITE_FINDIFF_API_URL!;
 
 const secService = {
-    compare10KFilings: async (stock1:{accessionNumber:string, filingDate:string, primaryDocument:string}, stock2:{accessionNumber:string, filingDate:string, primaryDocument:string}, sections: string[])=>{
+    compare10KFilings: async (stock1:{cik: string, accessionNumber:string, primaryDocument:string}, stock2:{cik: string, accessionNumber:string, primaryDocument:string}, sections: string[])=>{
         return await API.post(`${URL}/compare_10k_filings`, { stock1, stock2, sections });
     },
     searchTickers: async (query: string) => {

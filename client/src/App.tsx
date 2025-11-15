@@ -24,7 +24,9 @@ function App() {
 
     const stock1 = available10KFilings.find(filing=>filing.filingDate === selectedOlderFilingDate);
     const stock2 = available10KFilings.find(filing=>filing.filingDate === selectedNewerFilingDate);
-    const resp = await secService.compare10KFilings(stock1!, stock2!, selectedSections);
+    const stockData1 = {cik: selectedStock!.cik_str, accessionNumber: stock1!.accessionNumber, primaryDocument: stock1!.primaryDocument};
+    const stockData2 = {cik: selectedStock!.cik_str, accessionNumber: stock2!.accessionNumber, primaryDocument: stock2!.primaryDocument};
+    const resp = await secService.compare10KFilings(stockData1, stockData2, selectedSections);
 
     if(resp.ok){
       const jobId = await resp.json();
