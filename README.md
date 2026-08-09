@@ -18,10 +18,6 @@ FinDiff pulls annual reports straight from SEC EDGAR, extracts the sections that
 
 </div>
 
-<!-- TODO: drop a screenshot or 20s GIF of the chat UI here. This is the single highest-impact
-     addition to this README — a reviewer should see the product before reading a word of prose.
-     Suggested: ![FinDiff](docs/screenshot.png) -->
-
 ---
 
 ## The problem
@@ -286,7 +282,3 @@ What I ended up learning along the way was mostly not about finance. It was abou
 - **A side project stops being a side project the moment someone can pay for it.** Webhook signature verification, entitlements in the token rather than in application code, a real domain with DKIM — the last 20% of the work was all of it.
 
 This is a solo project: I designed the architecture, wrote the frontend and the backend, provisioned the infrastructure, and shipped it to production.
-
-I'm currently looking for **<!-- TODO: full-time SWE roles / Summer 2026 internships / etc. -->**, with the most interest in backend, distributed systems, and applied AI.
-
-**[Live app](https://findiff.com)** · **[LinkedIn](<!-- TODO -->)** · **[Email](mailto:ninjanerozz@gmail.com)**
